@@ -19,8 +19,8 @@ int main()
 
     for (int i = 0; i < n; i++)
     {
-	    int temp;
-	    cin >> temp;
+        int temp;
+        cin >> temp;
         seq.push_back(-1);
         seq.push_back(temp);
     }
