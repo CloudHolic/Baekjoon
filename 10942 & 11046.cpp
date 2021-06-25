@@ -47,12 +47,12 @@ int main()
 
     for(int i = 0; i < m; i++)
     {
-	    int s, e;	    
-	    cin >> s >> e;
+        int s, e;	    
+        cin >> s >> e;
 
-	    const int trans_s = 2 * s - 1;
-	    const int trans_e = 2 * e - 1;
-	    const int trans_center = (trans_s + trans_e) / 2;
+        const int trans_s = 2 * s - 1;
+        const int trans_e = 2 * e - 1;
+        const int trans_center = (trans_s + trans_e) / 2;
 
         cout << (trans_center - trans_s <= palindrome[trans_center]) << "\n";
     }
