@@ -42,25 +42,28 @@ namespace CardFactory
 
             Parallel.ForEach(cardList, card =>
             {
-                var cur = card.Front > card.Back;
-                var max = cur ? card.Front : card.Back;
-                var min = cur ? card.Back : card.Front;
+                var max = Math.Max(card.Front, card.Back);
+                var min = Math.Min(card.Front, card.Back);
             
-                for (int i = 0; i < nm[1]; i++)
+                var lastQuery = -1;
+                for (var i = nm[1] - 1; i > -1; i--)
                 {
-                    if (queryList[i] < min)
+                    if (queryList[i] >= max || queryList[i] < min)
                         continue;
                     
-                    if (queryList[i] >= max)
-                        cur = !cur;
-                    else if (!cur)
-                        cur = true;
+                    lastQuery = i;
+                    break;
                 }
             
-                result += cur ? max : min;
+                var largeQueryCount = 0;
+                for (var i = lastQuery + 1; i < nm[1]; i++)
+                    if (queryList[i] >= max)
+                        largeQueryCount++;
+            
+                result += (lastQuery > -1) && (largeQueryCount % 2 == 0) ? max : min;
             });
             
-            Console.Write(result);
+            Console.WriteLine(result);
             return 0;
         }
     }
