@@ -42,8 +42,9 @@ namespace CardFactory
 
             Parallel.ForEach(cardList, card =>
             {
-                var max = Math.Max(card.Front, card.Back);
-                var min = Math.Min(card.Front, card.Back);
+                var init = card.Front > card.Back;
+                var max = init ? card.Front : card.Back;
+                var min = init ? card.Back : card.Front;
             
                 var lastQuery = -1;
                 for (var i = nm[1] - 1; i > -1; i--)
@@ -60,7 +61,7 @@ namespace CardFactory
                     if (queryList[i] >= max)
                         largeQueryCount++;
             
-                result += (lastQuery > -1) ^ (largeQueryCount % 2 == 0) ? min : max;
+                result += (lastQuery > -1 || init) ^ (largeQueryCount % 2 == 0) ? min : max;
             });
             
             Console.WriteLine(result);

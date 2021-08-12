@@ -37,9 +37,9 @@ int main()
 
     parallel_for(int(0), n, [&](int i)
     {
-        bool cur = front[i] > back[i];
-        int maxNum = max(front[i], back[i]);
-        int minNum = min(front[i], back[i]);
+        bool init = front[i] > back[i];
+        int maxNum = init ? front[i] : back[i];
+        int minNum = init ? back[i] : front[i];
             
         int lastQuery = -1;
         for (int i = m - 1; i > -1; i--)
@@ -56,7 +56,7 @@ int main()
             if (query[i] >= maxNum)
                 largeQueryCount++;
     
-        result += (lastQuery > -1) ^ (largeQueryCount % 2 == 0) ? minNum : maxNum;
+        result += (lastQuery > -1 || init) ^ (largeQueryCount % 2 == 0) ? minNum : maxNum;
     });
 
     cout << result;
