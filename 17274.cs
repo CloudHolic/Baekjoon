@@ -60,7 +60,7 @@ namespace CardFactory
                     if (queryList[i] >= max)
                         largeQueryCount++;
             
-                result += (lastQuery > -1) && (largeQueryCount % 2 == 0) ? max : min;
+                result += (lastQuery > -1) ^ (largeQueryCount % 2 == 0) ? min : max;
             });
             
             Console.WriteLine(result);

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <vector>
 #include <ppl.h>
 
@@ -37,20 +38,25 @@ int main()
     parallel_for(int(0), n, [&](int i)
     {
         bool cur = front[i] > back[i];
-        int max = cur ? front[i] : back[i];
-        int min = cur ? back[i] : front[i];
-
-        for(int j = 0; i < m; i++)
+        int maxNum = max(front[i], back[i]);
+        int minNum = min(front[i], back[i]);
+            
+        int lastQuery = -1;
+        for (int i = m - 1; i > -1; i--)
         {
-            if(query[j] > max)            
-                continue;            
-            else if(query[j] < min)            
-                cur = !cur;            
-            else if(!cur)
-                cur = !cur;            
+            if (query[i] >= maxNum || query[i] < minNum)
+                continue;
+            
+            lastQuery = i;
+            break;
         }
-
-        result += cur ? max : min;
+    
+        int largeQueryCount = 0;
+        for (int i = lastQuery + 1; i < m; i++)
+            if (query[i] >= maxNum)
+                largeQueryCount++;
+    
+        result += (lastQuery > -1) ^ (largeQueryCount % 2 == 0) ? minNum : maxNum;
     });
 
     cout << result;
