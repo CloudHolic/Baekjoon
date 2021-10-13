@@ -2,10 +2,14 @@ open System
 
 [<EntryPoint>]
 let main _ =
-    let first (a, _, _ , _) = a
-    let second (_, b, _, _) = b
-    let third (_, _, c, _) = c
-    let fourth (_, _, _, d) = d
+    let unpack tup ind =
+        let (a, b, c, d) = tup
+        match ind with
+        | 0 -> a
+        | 1 -> b
+        | 2 -> c
+        | 3 -> d
+        | _ -> failwith("Unpack failed - Invalid index.")
 
     let makePoints = Array.map int    
     let splitPoint (a: int []) = (a.[0 .. 1], a.[2 .. 3], a.[4 .. 5], a.[6 .. 7])
@@ -21,8 +25,8 @@ let main _ =
 
     let points = Console.ReadLine().Split() |> makePoints |> splitPoint
     
-    let abc = (first points, second points, third points) |||> ccw
-    let abd = (first points, second points, fourth points) |||> ccw
+    let abc = (unpack points 0, unpack points 1, unpack points 2) |||> ccw
+    let abd = (unpack points 0, unpack points 1, unpack points 3) |||> ccw
 
     abc * abd
     |> function
