@@ -3,7 +3,6 @@ open System.IO
 open System.Text
 
 type Stack<'T> (internalList: list<'T>)=
-    let mutable hashCode = None
     member internal _.internalList = internalList
 
     member _.Head =
