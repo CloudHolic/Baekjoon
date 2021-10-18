@@ -1,7 +1,7 @@
 open System
 
 [<EntryPoint>]
-let main argv =
+let main _ =
     let makePoint = Array.map int
     let makeVec = Array.map2 (fun x y -> x - y)
 

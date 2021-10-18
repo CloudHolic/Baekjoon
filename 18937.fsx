@@ -1,7 +1,7 @@
 open System
 
 [<EntryPoint>]
-let main argv =
+let main _ =
     let inverse player =
         match player with
         | "Whiteking" -> "Blackking"
