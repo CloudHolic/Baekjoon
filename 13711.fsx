@@ -7,32 +7,34 @@ let main _ =
 
     let rec binSearch target arr idx =
         match Array.length arr with
-        | 0
-        | 1 -> Some (idx + 1)
+        | 1 ->
+            match sign <| compare target arr.[0] with
+            | -1 -> idx
+            | _ -> idx + 1
+        | 2 ->
+            match (target, arr.[0], arr.[1]) with
+            | (a, b, _) when a < b -> idx
+            | (a, b, c) when a > b && a < c -> idx + 1
+            | _ -> idx + 2
         | i ->
             let middle = i / 2
             match sign <| compare target arr.[middle] with
-            | 0 -> Some target
-            | -1 -> binSearch target arr.[.. middle - 1] 0
-            | _ -> binSearch target arr.[middle + 1 ..] middle
+            | -1 -> binSearch target arr.[.. middle - 1] idx
+            | _ -> binSearch target arr.[middle + 1 ..] (idx + middle + 1)
 
-    let lis l =
-        let size = Array.length l
+    let lis lst =
+        let size = Array.length lst
         let cache = Array.create size -1
         let mutable maxLength = 0
 
         for i in 0 .. (size - 1) do
             match maxLength with
-            | k when k = 0 || cache.[k - 1] < l.[i] ->
-                cache.[k] <- l.[i]
+            | k when k = 0 || cache.[k - 1] < lst.[i] ->
+                cache.[k] <- lst.[i]
                 maxLength <- maxLength + 1
             | _ ->                
-                match binSearch l.[i] cache.[0 .. maxLength - 1] 0 with
-                | None ->
-                    cache.[maxLength] <- l.[i]
-                    maxLength <- maxLength + 1
-                | Some x ->
-                    cache.[x] <- l.[i]
+                let idx = binSearch lst.[i] cache.[0 .. maxLength - 1] 0
+                cache.[idx] <- lst.[i]
         maxLength
 
     let makeInverse arr =
