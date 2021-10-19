@@ -12,7 +12,7 @@ short cache_f[2][7001], cache_b[2][7001];
 void solve(const short start_a, const short end_a, const short start_b, const short end_b)
 {
     // 1. Initialize & Split str_a in half    
-    for(short i = 0; i < 2; i++)
+    for (short i = 0; i < 2; i++)
     {
         memset(cache_f[i] + start_b - 1, 0, sizeof(short) * (end_b - start_b + 2));
         memset(cache_b[i] + start_b, 0, sizeof(short) * (end_b - start_b + 2));
@@ -60,22 +60,15 @@ void solve(const short start_a, const short end_a, const short start_b, const sh
     }
 
     // 5. Check & record the answer and split into two problems.
-    const bool is_answer = mid == end_a - 1 && idx < end_b ? cache_b[mid & 1 ^ 1][idx + 1] : false;
-    
     if (mid == start_a)
     {
-        if(cache_f[mid & 1][idx] > 0)
-			answer.push_back(str_a[start_a - 1]);
+        if (cache_f[mid & 1][idx] > 0)
+            answer.push_back(str_a[start_a - 1]);
     }
     else
         solve(start_a, mid, start_b, idx);
 
-    if (mid == end_a - 1)
-    {
-        if (is_answer)
-            answer.push_back(str_a[end_a - 1]);
-    }
-    else if (mid < end_a)
+    if (mid < end_a)
         solve(mid + 1, end_a, idx + 1, end_b);
 }
 
