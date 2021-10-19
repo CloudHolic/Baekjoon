@@ -72,6 +72,6 @@ int main()
 
     solve(1, str_a.length(), 1, str_b.length());
 
-    cout << answer.length() << "\n" << answer;
+    cout << answer.length() - 1 << "\n" << answer;
     return 0;
 }
