@@ -9,34 +9,34 @@ string answer;
 
 short cache_f[2][7001], cache_b[2][7001];
 
-void solve(const short start_a, const short end_a, const short start_b, const short end_b)
+void solve(const int start_a, const int end_a, const int start_b, const int end_b)
 {
     // 1. Initialize & Split str_a in half    
-    for (short i = 0; i < 2; i++)
+    for (int i = 0; i < 2; i++)
     {
         memset(cache_f[i] + start_b - 1, 0, sizeof(short) * (end_b - start_b + 2));
         memset(cache_b[i] + start_b, 0, sizeof(short) * (end_b - start_b + 2));
     }
-    const short mid = (start_a + end_a) / 2;
+    const int mid = (start_a + end_a) / 2;
 
     // 2. Forwarding DP
-    for (short i = start_a; i <= mid; i++)
-        for (short j = start_b; j <= end_b; j++)
+    for (int i = start_a; i <= mid; i++)
+        for (int j = start_b; j <= end_b; j++)
             if (str_a[i - 1] == str_b[j - 1])
                 cache_f[i & 1][j] = cache_f[i & 1 ^ 1][j - 1] + 1;
             else
                 cache_f[i & 1][j] = max(cache_f[i & 1 ^ 1][j], cache_f[i & 1][j - 1]);
 
     // 3. Reverse DP
-    for (short i = end_a; i > mid; i--)
-        for (short j = end_b; j >= start_b; j--)
+    for (int i = end_a; i > mid; i--)
+        for (int j = end_b; j >= start_b; j--)
             if (str_a[i - 1] == str_b[j - 1])
                 cache_b[i & 1][j] = cache_b[i & 1 ^ 1][j + 1] + 1;
             else
                 cache_b[i & 1][j] = max(cache_b[i & 1 ^ 1][j], cache_b[i & 1][j + 1]);
 
     // 4. Find maximum index & answer
-    short idx, max;
+    int idx, max;
 
     if (cache_f[mid & 1][end_b] > cache_b[mid & 1 ^ 1][start_b])
     {
@@ -49,9 +49,9 @@ void solve(const short start_a, const short end_a, const short start_b, const sh
         max = cache_b[mid & 1][start_b];
     }
 
-    for (short i = start_b; i < end_b; i++)
+    for (int i = start_b; i < end_b; i++)
     {
-        const short cur = cache_f[mid & 1][i] + cache_b[mid & 1 ^ 1][i + 1];
+        const int cur = cache_f[mid & 1][i] + cache_b[mid & 1 ^ 1][i + 1];
         if (cur <= max)
             continue;
 
@@ -78,7 +78,7 @@ int main()
     cin.tie(nullptr);
 
     cin >> str_a >> str_b;
-    solve(1, str_a.length(), 1, str_b.length());
+    solve(1, static_cast<int>(str_a.length()), 1, static_cast<int>(str_b.length()));
     cout << answer.length() << "\n" << answer;
     return 0;
 }
