@@ -32,17 +32,9 @@ int solve()
 {
     const int len_a = static_cast<int>(str_a.size()), len_b = static_cast<int>(str_b.size());
     const int block_size = (len_b >> 6) + 1;
-    int answer = 0;
 
     for (int j = 0; j < len_b; j++)
         set_bit(match[str_b[j] - 'A'], j);
-
-    for (int i = 0; i < len_b; i++)
-        if (str_a[0] == str_b[i])
-        {
-            set_bit(cache, i);
-            break;
-        }
 
     for (int i = 0; i < len_a; i++)
     {
@@ -63,6 +55,7 @@ int solve()
         }
     }
 
+    int answer = 0;
     for (int i = 0; i < block_size; i++)
         answer += count(cache[i]);
 
