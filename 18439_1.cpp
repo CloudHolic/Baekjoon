@@ -1,3 +1,6 @@
+// Solved by std::bitset
+// It returns correct answer, but exceeds the time limit.
+
 #include <bitset>
 #include <iostream>
 #include <string>
