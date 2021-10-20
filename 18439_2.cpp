@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <cstring>
 
 using namespace std;
 
@@ -10,7 +9,7 @@ typedef unsigned long long uint64;
 
 string str_a, str_b;
 
-uint64 cache[782], match[782];
+uint64 cache[782], match[26][782];
 
 uint64 subtract(uint64& x, const uint64 y)
 {
@@ -35,6 +34,9 @@ int solve()
     const int block_size = (len_b >> 6) + 1;
     int answer = 0;
 
+    for (int j = 0; j < len_b; j++)
+        set_bit(match[str_b[j] - 'A'], j);
+
     for (int i = 0; i < len_b; i++)
         if (str_a[0] == str_b[i])
         {
@@ -44,17 +46,11 @@ int solve()
 
     for (int i = 0; i < len_a; i++)
     {
-        memset(match, 0, sizeof(uint64) * block_size);
-
-        for (int j = 0; j < len_b - 1; j++)
-            if (str_a[i + 1] == str_b[j + 1])
-                set_bit(match, j);
-
         uint64 shift_carry = 1, subtract_carry = 0;
 
         for (int k = 0; k < block_size; k++)
         {
-            uint64 temp1 = match[k] | cache[k];
+            uint64 temp1 = match[str_a[i] - 'A'][k] | cache[k];
 
             const uint64 temp2 = cache[k] << 1 | shift_carry;
             shift_carry = cache[k] >> 63;
