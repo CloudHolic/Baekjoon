@@ -11,6 +11,7 @@ typedef unsigned long long uint64;
 
 string str_a, r_str_a, str_b, r_str_b;
 string answer;
+int len_a;
 
 uint64 cache_f[782], cache_b[782], match[26][782], r_match[26][782];
 short result_f[50001], result_b[50001];
@@ -66,7 +67,7 @@ void solve(const int start_a, const int end_a, const int start_b, const int end_
         result_f[i] = result_f[i - 1] + get_bit(cache_f, i - 1);
 
     // 3. Reverse DP
-    for (int i = start_a; i < end_a - mid; i++)
+    for (int i = len_a - end_a + 1; i < len_a - mid + 1; i++)
     {
         uint64 shift_carry = 1, subtract_carry = 0;
 
@@ -132,12 +133,13 @@ int main()
 
     cin >> str_a >> str_b;
 
-	r_str_a = str_a;
+    r_str_a = str_a;
     r_str_b = str_b;
     reverse(r_str_a.begin(), r_str_a.end());
     reverse(r_str_b.begin(), r_str_b.end());
 
-    const int len_a = static_cast<int>(str_a.size()), len_b = static_cast<int>(str_b.size());
+    len_a = static_cast<int>(str_a.size());
+	const int len_b = static_cast<int>(str_b.size());
 
     for (int j = 0; j < len_b; j++)
     {
