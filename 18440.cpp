@@ -34,7 +34,6 @@ int count(uint64 num)
     return count;
 }
 
-
 void solve(const int start_a, const int end_a, const int start_b, const int end_b)
 {
     // 1. Initialize & Split str_a in half
