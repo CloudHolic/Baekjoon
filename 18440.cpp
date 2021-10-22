@@ -11,9 +11,9 @@ typedef unsigned long long uint64;
 
 string str_a, r_str_a, str_b, r_str_b;
 string answer;
-int len_a;
+int len_a, len_b;
 
-uint64 cache_f[782], cache_b[782], match[26][782], r_match[26][782];
+uint64 cache_f[782], cache_b[782], match[26][782], r_match[26][782], temp_match[782];
 short result_f[50001], result_b[50001];
 
 uint64 subtract(uint64& x, const uint64 y)
@@ -39,7 +39,7 @@ void solve(const int start_a, const int end_a, const int start_b, const int end_
     const int mid = (start_a + end_a) / 2;
     const int start_block = start_b >> 6, end_block = end_b >> 6;
 
-    result_f[start_a - 1] = result_b[end_b + 1] = 0;
+    result_f[start_b - 1] = result_b[end_b + 1] = 0;
     memset(cache_f + start_block, 0, sizeof(uint64) * (end_block - start_block + 1));
     memset(cache_b + start_block, 0, sizeof(uint64) * (end_block - start_block + 1));
 
@@ -48,9 +48,9 @@ void solve(const int start_a, const int end_a, const int start_b, const int end_
     {
         uint64 shift_carry = 1, subtract_carry = 0;
 
-        for (int k = start_block; k < end_block + 1; k++)
+        for (int k = start_block; k <= end_block; k++)
         {
-            uint64 temp1 = match[str_a[i - 1] - 'A'][k] | cache_f[k];
+            uint64 temp1 = match[str_a[i - 1] - 'A'][k] >> start_b - 1 | cache_f[k];
 
             const uint64 temp2 = cache_f[k] << 1 | shift_carry;
             shift_carry = cache_f[k] >> 63;
@@ -64,16 +64,16 @@ void solve(const int start_a, const int end_a, const int start_b, const int end_
     }
 
     for (int i = start_b; i <= end_b; i++)
-        result_f[i] = result_f[i - 1] + get_bit(cache_f, i - 1);
+        result_f[i] = result_f[i - 1] + get_bit(cache_f, i - start_b);
 
     // 3. Reverse DP
-    for (int i = len_a - end_a; i < len_a - mid; i++)
+    for (int i = len_a - end_a; i <= len_a - mid - 1; i++)
     {
         uint64 shift_carry = 1, subtract_carry = 0;
 
-        for (int k = start_block; k < end_block + 1; k++)
+        for (int k = start_block; k <= end_block; k++)
         {
-            uint64 temp1 = r_match[r_str_a[i] - 'A'][k] | cache_b[k];
+            uint64 temp1 = r_match[r_str_a[i] - 'A'][k] >> len_b - end_b | cache_b[k];
 
             const uint64 temp2 = cache_b[k] << 1 | shift_carry;
             shift_carry = cache_b[k] >> 63;
@@ -139,7 +139,7 @@ int main()
     reverse(r_str_b.begin(), r_str_b.end());
 
     len_a = static_cast<int>(str_a.size());
-    const int len_b = static_cast<int>(str_b.size());
+    len_b = static_cast<int>(str_b.size());
 
     for (int j = 0; j < len_b; j++)
     {
