@@ -67,13 +67,13 @@ void solve(const int start_a, const int end_a, const int start_b, const int end_
         result_f[i] = result_f[i - 1] + get_bit(cache_f, i - 1);
 
     // 3. Reverse DP
-    for (int i = len_a - end_a + 1; i < len_a - mid + 1; i++)
+    for (int i = len_a - end_a; i < len_a - mid; i++)
     {
         uint64 shift_carry = 1, subtract_carry = 0;
 
         for (int k = start_block; k < end_block + 1; k++)
         {
-            uint64 temp1 = r_match[r_str_a[i - 1] - 'A'][k] | cache_b[k];
+            uint64 temp1 = r_match[r_str_a[i] - 'A'][k] | cache_b[k];
 
             const uint64 temp2 = cache_b[k] << 1 | shift_carry;
             shift_carry = cache_b[k] >> 63;
@@ -139,7 +139,7 @@ int main()
     reverse(r_str_b.begin(), r_str_b.end());
 
     len_a = static_cast<int>(str_a.size());
-	const int len_b = static_cast<int>(str_b.size());
+    const int len_b = static_cast<int>(str_b.size());
 
     for (int j = 0; j < len_b; j++)
     {
