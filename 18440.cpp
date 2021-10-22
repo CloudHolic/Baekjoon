@@ -43,7 +43,7 @@ void solve(const int start_a, const int end_a, const int start_b, const int end_
 
     vector<uint64> cache_f(block_size, 0), cache_b(block_size, 0);
     vector<vector<uint64>> match(26, vector<uint64>(block_size, 0));
-	vector<vector<uint64>> r_match(26, vector<uint64>(block_size, 0));
+    vector<vector<uint64>> r_match(26, vector<uint64>(block_size, 0));
 
     result_f[start_b - 1] = result_b[end_b + 1] = 0;
     
