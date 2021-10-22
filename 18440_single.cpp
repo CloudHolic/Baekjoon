@@ -1,8 +1,9 @@
+// This code works well if and only if len_a & len_b <=64.
+// For multi-word size, it doesn't works well.
+
 #include <iostream>
 #include <string>
 #include <cstring>
-
-using namespace std;
 
 using namespace std;
 
@@ -11,11 +12,11 @@ using namespace std;
 
 typedef unsigned long long uint64;
 
-string str_a, str_b;
+string str_a, r_str_a, str_b, r_str_b;
 string answer;
 int len_a, len_b;
 
-uint64 cache_f[782], cache_b[782], match[26][782], r_match[26][782];
+uint64 cache_f[782], cache_b[782], match[26][782], r_match[26][782], temp_match[782];
 short result_f[50001], result_b[50001];
 
 uint64 subtract(uint64& x, const uint64 y)
@@ -35,23 +36,17 @@ int count(uint64 num)
     return count;
 }
 
-
 void solve(const int start_a, const int end_a, const int start_b, const int end_b)
 {
     // 1. Initialize & Split str_a in half
     const int mid = (start_a + end_a) / 2;
     const int start_block = start_b >> 6, end_block = end_b >> 6;
 
-    memset(cache_f + start_b - 1, 0, sizeof(short) * (end_b - start_b + 2));
-    memset(cache_b + start_b, 0, sizeof(short) * (end_b - start_b + 2));
+    result_f[start_b - 1] = result_b[end_b + 1] = 0;
+    memset(cache_f + start_block, 0, sizeof(uint64) * (end_block - start_block + 1));
+    memset(cache_b + start_block, 0, sizeof(uint64) * (end_block - start_block + 1));
 
-    // 2. Forwarding DP    
-    string str_a_f = str_a.substr(start_a, mid - start_a);
-    string str_b_f = str_b.substr(start_b, end_b - start_b);
-
-    for (int i = 0; i < str_b_f.size(); i++)
-        set_bit(match[str_b_f[i] - 'A'], i);
-
+    // 2. Forwarding DP
     for (int i = start_a; i <= mid; i++)
     {
         uint64 shift_carry = 1, subtract_carry = 0;
@@ -71,47 +66,49 @@ void solve(const int start_a, const int end_a, const int start_b, const int end_
         }
     }
 
-    for (int i = start_a; i <= mid; i++)
-        for (int j = start_b; j <= end_b; j++)
-            if (str_a[i - 1] == str_b[j - 1])
-                cache_f[i & 1][j] = cache_f[i & 1 ^ 1][j - 1] + 1;
-            else
-                cache_f[i & 1][j] = max(cache_f[i & 1 ^ 1][j], cache_f[i & 1][j - 1]);
+    for (int i = start_b; i <= end_b; i++)
+        result_f[i] = result_f[i - 1] + get_bit(cache_f, i - start_b);
 
     // 3. Reverse DP
-    string str_a_r = str_a.substr(start_a, end_a - mid);
-    string str_b_r = str_b.substr(start_b, end_b - start_b);
-    reverse(str_a_r.begin(), str_a_r.end());
-    reverse(str_b_r.begin(), str_b_r.end());
-    
+    for (int i = len_a - end_a; i <= len_a - mid - 1; i++)
+    {
+        uint64 shift_carry = 1, subtract_carry = 0;
 
-    for (int i = 0; i < str_b_r.size(); i++)
-        set_bit(r_match[str_b_r[i] - 'A'], i);
+        for (int k = start_block; k <= end_block; k++)
+        {
+            uint64 temp1 = r_match[r_str_a[i] - 'A'][k] >> len_b - end_b | cache_b[k];
 
-    for (int i = end_a; i > mid; i--)
-        for (int j = end_b; j >= start_b; j--)
-            if (str_a[i - 1] == str_b[j - 1])
-                cache_b[i & 1][j] = cache_b[i & 1 ^ 1][j + 1] + 1;
-            else
-                cache_b[i & 1][j] = max(cache_b[i & 1 ^ 1][j], cache_b[i & 1][j + 1]);
+            const uint64 temp2 = cache_b[k] << 1 | shift_carry;
+            shift_carry = cache_b[k] >> 63;
+
+            uint64 temp3 = temp1;
+            subtract_carry = subtract(temp3, subtract_carry);
+            subtract_carry += subtract(temp3, temp2);
+
+            cache_b[k] = temp1 ^ temp1 & temp3;
+        }
+    }
+
+    for (int i = end_b; i >= start_b; i--)
+        result_b[i] = result_b[i + 1] + get_bit(cache_b, end_b - i);
 
     // 4. Find maximum index & answer
     int idx, max;
 
-    if (cache_f[mid & 1][end_b] > cache_b[mid & 1 ^ 1][start_b])
+    if (result_f[end_b] > result_b[start_b])
     {
         idx = end_b;
-        max = cache_f[mid & 1][end_b];
+        max = result_f[end_b];
     }
     else
     {
         idx = start_b - 1;
-        max = cache_b[mid & 1][start_b];
+        max = result_b[start_b];
     }
 
     for (int i = start_b; i < end_b; i++)
     {
-        const int cur = cache_f[mid & 1][i] + cache_b[mid & 1 ^ 1][i + 1];
+        const int cur = result_f[i] + result_b[i + 1];
         if (cur <= max)
             continue;
 
@@ -122,7 +119,7 @@ void solve(const int start_a, const int end_a, const int start_b, const int end_
     // 5. Check & record the answer and split into two problems.
     if (mid == start_a)
     {
-        if (cache_f[mid & 1][idx] > 0)
+        if (result_f[idx] > 0)
             answer.push_back(str_a[start_a - 1]);
     }
     else
@@ -138,7 +135,22 @@ int main()
     cin.tie(nullptr);
 
     cin >> str_a >> str_b;
-    solve(0, static_cast<int>(str_a.length() - 1), 0, static_cast<int>(str_b.length() - 1));
+
+    r_str_a = str_a;
+    r_str_b = str_b;
+    reverse(r_str_a.begin(), r_str_a.end());
+    reverse(r_str_b.begin(), r_str_b.end());
+
+    len_a = static_cast<int>(str_a.size());
+    len_b = static_cast<int>(str_b.size());
+
+    for (int j = 0; j < len_b; j++)
+    {
+        set_bit(match[str_b[j] - 'A'], j);
+        set_bit(r_match[r_str_b[j] - 'A'], j);
+    }
+
+    solve(1, len_a, 1, len_b);
     cout << answer.length() << "\n" << answer;
     return 0;
 }
