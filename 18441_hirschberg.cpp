@@ -14,7 +14,8 @@ using namespace std;
 typedef unsigned long long uint64;
 
 string str_a, str_b;
-string answer;
+string answer, cur;
+size_t len_cur;
 
 short result_f[3001], result_b[3001];
 
@@ -35,7 +36,7 @@ int count(uint64 num)
     return count;
 }
 
-void solve(const int start_a, const int end_a, const int start_b, const int end_b)
+void solve(const int start_a, const int end_a, const int start_b, const int end_b, bool root)
 {
     // 1. Initialize & Split str_a in half
     const int mid = (start_a + end_a) / 2;
@@ -135,16 +136,19 @@ void solve(const int start_a, const int end_a, const int start_b, const int end_
     }
 
     // 5. Check & record the answer and split into two problems.
+    if (root && max <= cur.length())
+        return;
+
     if (mid == start_a)
     {
         if (result_f[idx] > 0)
             answer.push_back(str_a[start_a - 1]);
     }
     else
-        solve(start_a, mid, start_b, idx);
+        solve(start_a, mid, start_b, idx, false);
 
     if (mid < end_a)
-        solve(mid + 1, end_a, idx + 1, end_b);
+        solve(mid + 1, end_a, idx + 1, end_b, false);
 }
 
 int main()
@@ -153,33 +157,37 @@ int main()
     cin.tie(nullptr);
 
     int n;
-    string str, result, cur;
+    string str, result;
 
     cin >> n;
-    for(int i = 1; i <= n; i++)
+    for (int i = 1; i <= n; i++)
     {
         cin >> str;
         const size_t len = str.length();
         cur.clear();
+        len_cur = 0;
 
-        for(size_t j = 1; j < len; j++)
+        for (size_t j = 1; j < len; j++)
         {
+            if (len_cur >= len - j)
+                break;
+
             answer.clear();
             str_a = str.substr(0, j);
             str_b = str.substr(j, len - j);
 
-            if(cur.length() >= str_b.length())
-                break;
+            solve(1, j, 1, len - j, true);
 
-            solve(1, static_cast<int>(str_a.length()), 1, static_cast<int>(str_b.length()));
-
-            if (cur.length() < answer.length())
-                cur = answer;            
+            if (len_cur < answer.length())
+            {
+                cur = answer;
+                len_cur = cur.length();
+            }
         }
 
         cur += cur;
-        result += "Case #" + to_string(i) + ": " + to_string(cur.length()) + "\n";
-        if (cur.length() > 0)
+        result += "Case #" + to_string(i) + ": " + to_string(len_cur * 2) + "\n";
+        if (len_cur > 0)
             result += cur + "\n";
     }
 

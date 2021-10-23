@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
-#include <vector>
 
 #pragma warning (disable: 4554)
 #pragma warning (disable: 26451)
@@ -12,6 +11,12 @@ using namespace std;
 #define set_bit(arr, x) (arr[x >> 6] |= 1LL << (x & 63))
 
 typedef unsigned long long uint64;
+
+int global_count;
+uint64 cache[3000][47] = {};
+uint64 match[3000][26][47] = {};
+int dp_array[3001][3001] = {};
+string answer[3000];
 
 uint64 subtract(uint64& x, const uint64 y)
 {
@@ -30,16 +35,13 @@ int count(uint64 num)
     return count;
 }
 
-string solve(const string& str_a, const string& str_b)
+void solve(const string& str_a, const string& str_b)
 {
     const int len_a = static_cast<int>(str_a.size()), len_b = static_cast<int>(str_b.size());
     const int block_size = (len_b >> 6) + 1;
-    vector<uint64> cache(block_size, 0);
-    vector<vector<uint64>> match(26, vector<uint64>(block_size, 0));
-    vector<vector<int>> dp_array(len_a + 1, vector<int>(len_b + 1, 0));
 
     for (int j = 0; j < len_b; j++)
-        set_bit(match[str_b[j] - 'a'], j);
+        set_bit(match[global_count][str_b[j] - 'a'], j);
 
     for (int i = 0; i < len_a; i++)
     {
@@ -47,25 +49,24 @@ string solve(const string& str_a, const string& str_b)
 
         for (int k = 0; k < block_size; k++)
         {
-            uint64 temp1 = match[str_a[i] - 'a'][k] | cache[k];
+            uint64 temp1 = match[global_count][str_a[i] - 'a'][k] | cache[global_count][k];
 
-            const uint64 temp2 = cache[k] << 1 | shift_carry;
-            shift_carry = cache[k] >> 63;
+            const uint64 temp2 = cache[global_count][k] << 1 | shift_carry;
+            shift_carry = cache[global_count][k] >> 63;
 
             uint64 temp3 = temp1;
             subtract_carry = subtract(temp3, subtract_carry);
             subtract_carry += subtract(temp3, temp2);
 
-            cache[k] = temp1 ^ temp1 & temp3;
+            cache[global_count][k] = temp1 ^ temp1 & temp3;
         }
 
         for (int j = 1; j <= len_b; j++)
-            dp_array[i + 1][j] = dp_array[i + 1][j - 1] + get_bit(cache, j - 1);
+            dp_array[i + 1][j] = dp_array[i + 1][j - 1] + get_bit(cache[global_count], j - 1);
     }
 
-    string answer;
     int i = len_a, j = len_b;
-    while (dp_array[i][j] != 0)
+    while (i > 0 && j > 0 && dp_array[i][j] != 0)
     {
         if (dp_array[i][j] == dp_array[i][j - 1])
             j--;
@@ -73,14 +74,11 @@ string solve(const string& str_a, const string& str_b)
             i--;
         else if (dp_array[i][j] - 1 == dp_array[i - 1][j - 1])
         {
-            answer.push_back(str_a[i - 1]);
+            answer[global_count].push_back(str_a[i - 1]);
             i--;
-        	j--;
+            j--;
         }
     }
-
-    reverse(answer.begin(), answer.end());
-    return answer;
 }
 
 int main()
@@ -89,26 +87,31 @@ int main()
     cin.tie(nullptr);
 
     int n;
-    string str, result, cur;
+    global_count = -1;
+    string str, result;
 
     cin >> n;
-    for(int i = 1; i <= n; i++)
+    for (int i = 1; i <= n; i++)
     {
+        int idx = -1;
         cin >> str;
         const size_t len = str.length();
-        cur.clear();
 
-        for(size_t j = 1; j < len; j++)
+        for (size_t j = 1; j < len; j++)
         {
-            if (cur.length() + j >= len)
+            global_count++;
+
+            if (idx > 0 && answer[idx].length() + j >= len)
                 break;
 
-            string answer = solve(str.substr(0, j), str.substr(j, len - j));            
+            solve(str.substr(0, j), str.substr(j, len - j));
 
-            if (cur.length() < answer.length())
-                cur = answer;
+            if (idx < 0 || answer[idx].length() < answer[global_count].length())
+                idx = global_count;            
         }
-
+        
+        string cur = idx > 0 ? answer[idx] : "";
+        reverse(cur.begin(), cur.end());
         cur += cur;
         result += "Case #" + to_string(i) + ": " + to_string(cur.length()) + "\n";
         if (cur.length() > 0)
