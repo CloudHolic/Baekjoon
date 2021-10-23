@@ -3,8 +3,7 @@ open System.IO
 
 [<EntryPoint>]
 let main _ =
-    let inline (<|*|) func (a, b, c, d) = func a b c d
-    let min4 a b c d = min a <| (min b <| min c d)
+    let min4 (a, b, c, d) = min a <| (min b <| min c d)
 
     use stream = new StreamReader(Console.OpenStandardInput())
 
@@ -38,7 +37,7 @@ let main _ =
             | _ when str1.[i - 2] = str2.[j - 2] -> db <- j
             | _ -> cost <- 1
 
-            cache.[i, j] <- min4 <|*| (cache.[i, j - 1] + 1, cache.[i - 1, j] + 1, cache.[i - 1, j - 1] + cost, cache.[k - 1, l - 1] + i + j - k - l - 1)
+            cache.[i, j] <- min4 (cache.[i, j - 1] + 1, cache.[i - 1, j] + 1, cache.[i - 1, j - 1] + cost, cache.[k - 1, l - 1] + i + j - k - l - 1)
 
         da_cache.[int str1.[i - 2] - int 'a'] <- i
 
