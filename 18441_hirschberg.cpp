@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -167,10 +168,13 @@ int main()
             str_a = str.substr(0, j);
             str_b = str.substr(j, len - j);
 
+            if(cur.length() >= str_b.length())
+                break;
+
             solve(1, static_cast<int>(str_a.length()), 1, static_cast<int>(str_b.length()));
 
             if (cur.length() < answer.length())
-                cur = answer;
+                cur = answer;            
         }
 
         cur += cur;
