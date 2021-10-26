@@ -1,7 +1,6 @@
 open System
 open System.IO
 open System.Numerics
-open System.Text
 
 [<EntryPoint>]
 let main _ = 
@@ -96,14 +95,12 @@ let main _ =
         List.init s (fun _ -> 2L) @ inner (int64 d) startX startX startC []
 
     use stream = new StreamReader(Console.OpenStandardInput())
-    let result = new StringBuilder()
 
     let num = stream.ReadLine().Trim() |> int64
 
     num
-    |> pollardRho    
-    |> List.sort
-    |> List.iter (fun x -> result.Append(x.ToString() + "\n") |> ignore)
-
-    printfn "%A" result
+    |> pollardRho
+    |> List.countBy id
+    |> List.fold (fun acc x -> acc * ((snd x |> int64) + 1L)) 1L
+    |> printfn "%O"
     0
