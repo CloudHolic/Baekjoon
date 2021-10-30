@@ -44,7 +44,10 @@ namespace MillerRabin
 
     bool miller_rabin(int64 num)
     {
-        for(auto &i: {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37})
+        if (num < 2 || num % 6 % 4 != 1)
+            return (num | 1) == 3;
+
+        for(auto &i: {2, 325, 9375, 28178, 450775, 9780504, 1795265022})    // {2, 7, 61} for 32-bit int.
         {
             if (num <= i)
                 break;
@@ -55,98 +58,158 @@ namespace MillerRabin
     }
 }
 
-namespace PollardRho
+int64 arr[1000];
+vector<bool> sieve(1000000);
+vector<int64> prime_list;
+
+int64 binary_gcd(int64 x, int64 y)
 {
-    using namespace MillerRabin;
+    if (x == 0)
+        return y;
+    if (y == 0)
+        return x;
 
-    int64 calc(int64 x, int64 c, int64 m)
-    {
-        int64 square = (int128)x * x % m;
-        return (square + c) % m;
-    }
+    int shift = __builtin_ctz(x | y);
+    x >>= __builtin_ctz(x);
 
-    void inner(int64 num, vector<int64> &factors)
-    {
-        if (num == 1)
-            return;
-        if (!(num & 1))
-        {
-            factors.push_back(2);
-            inner(num / 2, factors);
-            return;
-        }
-        if (miller_rabin(num))
-        {
-            factors.push_back(num);
-            return;
-        }
+    do {
+        y >>= __builtin_ctz(y);
+        if (x > y)
+            swap(x, y);
+        y -= x;
+    } while (y != 0);
 
-        int64 x, y, c;
-        for(;;)
-        {
-            x = rand() % (num - 2) + 1;
-            c = rand() % 20 + 1;
-            y = x;
-
-            do
-            {
-                x = calc(x, c,  num);
-                y = calc(calc(y, c, num), c, num);
-            } while(gcd(num, abs(x - y)) == 1);
-
-            if (x != y)
-                break;
-        }
-
-        int64 g = gcd(num, abs(x - y));
-        inner(g, factors);
-        inner(num / g, factors);
-    }
-
-    vector<int64> pollard_rho(int64 num)
-    {
-        vector<int64> result;
-        inner(num, result);
-        sort(result.begin(), result.end());
-        return result;
-    }
+    return x << shift;
 }
 
-int64 arr[1000];
-
-int main() {
+int main()
+{
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
     int n;
-    int64 result = 0, prev_factor = 0;
+    int64 result = 0;
+
+    for (int i = 2; i < 1000; i++)
+    {
+        if (sieve[i])
+            continue;
+        for (int j = i * i; j < 1000000; j += i)
+            sieve[j] = true;
+    }
+
+    for (int i = 2; i < 1000000; i++)
+    {
+        if (sieve[i])
+            continue;
+        prime_list.push_back(i);
+    }
 
     cin >> n;
-    for(int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++)
         cin >> arr[i];
 
-    for(int i = 0; i < n; i++)
+    for (const auto &f: prime_list)
     {
-        vector<int64> factors = PollardRho::pollard_rho(arr[i]);
-
-        for(auto &f: factors)
+        int64 len = 0;
+        for (int i = 0; i < n; i++)
         {
-            if(prev_factor == f)
-                continue;
-            prev_factor = f;
-
-            int64 len = 1;
-            for(int j = i + 1; j < n; j++)
+            if (arr[i] == 1 || arr[i] % f != 0)
             {
-                if (arr[j] % f != 0)
-                    break;
-                do
+                if (len >0)
+                    result ^= len;
+                len = 0;
+                continue;
+            }
+
+            while (arr[i] % f == 0)
+                arr[i] /= f;
+
+            len++;
+        }
+        result ^= len;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (arr[i] == 1)
+            continue;
+
+        int64 square = -1;
+        bool is_prime = MillerRabin::miller_rabin(arr[i]);
+        if (!is_prime)
+        {
+            auto root = static_cast<int64>(sqrt(arr[i]));
+            if (arr[i] == root * root)
+                square = root;
+        }
+
+        // arr[i] = p || arr[i] = p^2
+        if (is_prime || square > 0)
+        {
+            int64 f = is_prime ? arr[i] : square;
+            int64 len = 0;
+            for (int j = i; j < n; j++)
+            {
+                if (arr[j] == 1 || arr[j] % f != 0)
                 {
+                    if (len > 0)
+                        result ^= len;
+                    len = 0;
+                    continue;
+                }
+
+                while (arr[j] % f == 0)
                     arr[j] /= f;
-                } while (arr[j] % f == 0);                
+
                 len++;
             }
             result ^= len;
+        }
+        // arr[i] = p * q
+        else
+        {
+            int64 f = arr[i];
+            int64 len = 0;
+            for (int j = i; j < n; j++)
+            {
+                if (arr[j] == 1)
+                {
+                    len = 0;
+                    continue;
+                }
+
+                if (arr[j] % f != 0)
+                {
+                    int64 gcd = binary_gcd(arr[j], f);
+                    if (gcd == 1)
+                    {
+                        len = 0;
+                        continue;
+                    }
+
+                    result ^= len;
+                    for (; j < n; j++)
+                    {
+                        if (arr[j] == 1 || arr[j] % gcd != 0)
+                        {
+                            result ^= len;
+                            len = 0;
+                            break;
+                        }
+
+                        while (arr[j] % gcd == 0)
+                            arr[j] /= gcd;
+
+                        len++;
+                    }
+                }
+
+                while (arr[j] % f == 0)
+                    arr[j] /= f;
+
+                len++;
+            }
         }
     }
 
