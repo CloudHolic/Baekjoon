@@ -127,9 +127,6 @@ int main() {
 
     for(int i = 0; i < n; i++)
     {
-        if (arr[i] == 1)
-            continue;
-
         vector<int64> factors = PollardRho::pollard_rho(arr[i]);
 
         for(auto &f: factors)
@@ -142,14 +139,11 @@ int main() {
             for(int j = i + 1; j < n; j++)
             {
                 if (arr[j] % f != 0)
+                    break;
+                do
                 {
-                    result ^= len;
-                    len = 0;
-                    continue;
-                }
-
-                while (arr[j] % f == 0)
                     arr[j] /= f;
+                } while (arr[j] % f == 0);                
                 len++;
             }
             result ^= len;
