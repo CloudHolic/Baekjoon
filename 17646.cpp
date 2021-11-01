@@ -205,11 +205,11 @@ namespace QuadraticResidue
 
         return result % product;
     }
-    
+
     // Apply Hensel's Lifting.
     int64 hensel_lifting()
     {
-        
+
     }
 
     // Apply Tonelli-Shanks Algorithm.
@@ -283,6 +283,14 @@ namespace QuadraticResidue
 
         // 6. The answer is r, p - r.
     }
+
+    // Solve x^2 = n mod m.
+    vector<int64> quadratic_residue(int64 n, int64 m)
+    {
+        vector<int64> result;
+
+        return result;
+    }
 }
 
 namespace Cornacchia
@@ -341,46 +349,53 @@ int main()
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    using namespace QuadraticResidue;
+    int64 num;
+    cin >> num;
 
-    int t;
-    cin >> t;
-
-    for (int i = 0; i < t; i++)
+    // num = 4^x * (8y + 7) if answer = 4
+    int64 remainder = num;
+    while (!(remainder & 3))
+        remainder >>= 2;
+    if ((remainder & 7) == 7)
     {
-        int64 p, a_0, a_1;
-        cin >> p >> a_0 >> a_1;
-
-        if (p == 2)
-        {
-            if (a_0 == 0 && a_1 == 0)
-                cout << "0 0\n";
-            else if (a_0 == 0 && a_1 == 1)
-                cout << "0 1\n";
-            else if (a_0 == 1 && a_1 == 0)
-                cout << "1 1\n";
-            else
-                cout << "-1\n";
-
-            continue;
-        }
-
-        int64 k = (a_1 & 1) ? ((a_1 + p) / 2) : (a_1 / 2);
-        int64 n = (k * k - a_0 + p) % p;
-        int64 ans = tonelli_shanks(n, p);
-        if (ans == -1)
-        {
-            cout << "-1\n";
-            continue;
-        }
-
-        int64 result_1 = (k + ans) % p;
-        int64 result_2 = (a_1 - result_1 + p) % p;
-        if (result_1 < result_2)
-            cout << result_1 << " " << result_2 << "\n";
-        else
-            cout << result_2 << " " << result_1 << "\n";
+        cout << "4\n";
+        return 0;
     }
 
+    // Factorize num
+    // There are some 4a+3 prime that appears odd number if answer = 3
+    vector<int64> factors;
+    factors = PollardRho::pollard_rho(num);
+
+    int64 cur = 0;
+    int count = 0;
+    for (auto &f: factors)
+    {
+        if (cur < f)
+        {
+            if (count > 0 && (count & 1) == 1)
+                break;
+
+            cur = f, count = 0;
+        }
+        if (cur == f && (f & 3) == 3)
+            count++;
+    }
+    if (count & 1)
+    {
+        cout << "3\n";
+        return 0;
+    }
+
+    // sqrt * sqrt != n if answer = 2
+    auto root = static_cast<int64>(sqrt(num));
+    if (root * root != num)
+    {
+        cout << "2\n";
+        return 0;
+    }
+
+    // answer = 1
+    cout << "1\n";
     return 0;
 }
