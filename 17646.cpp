@@ -201,7 +201,7 @@ namespace QuadraticResidue
             return x;
 
         // f(x) = x^2 - n, f'(x) = 2x.
-        auto function = [n](int64 x) -> int64 { return x * x - n; };
+        auto function = [n, p](int64 x) -> int64 { return x * x - (n % p); };
         auto derivative = [](int64 x) -> int64 { return 2 * x; };
 
         if (derivative(x) % p != 0)
@@ -359,7 +359,6 @@ namespace QuadraticResidue
 
         int factor_size = static_cast<int>(factor_group.size());
         vector<int> binaryString(factor_size);
-        auto derivative = [](int64 x) -> int64 { return 2 * x; };
         function<void(vector<int>&, int)> do_crt = [&](vector<int> &binary, int size) -> void {
             vector<int64> remainders;
             for(int i = 0; i < size; i++)
