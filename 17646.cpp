@@ -197,6 +197,9 @@ namespace QuadraticResidue
     // Calculate recursively like x_(k+1) = x_k - f(x_k) * f'(x_1)^-1 mod p^(k+1).
     int64 hensel_lifting(int64 x, int64 n, int64 p, int64 k)
     {
+        if (k == 1)
+            return x;
+
         // f(x) = x^2 - n, f'(x) = 2x.
         auto function = [n](int64 x) -> int64 { return x * x - n; };
         auto derivative = [](int64 x) -> int64 { return 2 * x; };
@@ -228,6 +231,12 @@ namespace QuadraticResidue
     {
         if (n == 0)
             return 0;
+
+        if (n >= p)
+            n %= p;
+
+        if (p == 2)
+            return n;
 
         // 1. Check if n is quadratic residue in mod p.
         if (fast_pow(n, (p - 1) / 2, p) != 1)
@@ -334,7 +343,8 @@ namespace QuadraticResidue
             answers.push_back({hensel_lifting(ans, n, prev, count), hensel_lifting(prev - ans, n, prev, count)});
             factor_group.push_back(cur);
 
-            count = 0;
+            count = 1;
+            prev = cur = factors[i];
         }
 
         if (count > 0)
@@ -477,7 +487,7 @@ bool find_4_squares(int64 num, vector<int64>& squares)
     if ((remainder & 7) != 7)
         return false;
 
-    find_3_squares(num, true, squares);
+    find_3_squares(num - MillerRabin::fast_pow(4, quotient, num), true, squares);
     squares.push_back(MillerRabin::fast_pow(2, quotient, num));
     return true;
 }
@@ -504,6 +514,7 @@ int main()
         squares.push_back(static_cast<int64>(sqrt(num)));
     }
 
+    sort(squares.begin(), squares.end());
     copy(squares.begin(), squares.end(), ostream_iterator<int64>(cout, " "));
     return 0;
 }
