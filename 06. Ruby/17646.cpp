@@ -349,7 +349,7 @@ bool find_2_squares(int64 num, vector<int64>& factors, vector<int64>& squares, i
 
     size_t size = factors.size();
     int count = 0;
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
     {
         if (count == 0)
         {
@@ -414,7 +414,7 @@ bool find_3_squares(int64 num, vector<int64>& factors, vector<int64>& squares)
 
     size_t size = factors.size();
     int count = 0;
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
     {
         if (count == 0)
         {
