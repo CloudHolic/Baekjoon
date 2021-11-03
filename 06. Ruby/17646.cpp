@@ -49,7 +49,7 @@ namespace MillerRabin
         if (num < 2 || num % 6 % 4 != 1)
             return (num | 1) == 3;
 
-        for(auto &i: {2, 325, 9375, 28178, 450775, 9780504, 1795265022})    // {2, 7, 61} for 32-bit int.
+        for(auto &i: {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37})
         {
             if (num <= i)
                 break;
@@ -166,65 +166,6 @@ namespace QuadraticResidue
         return x_1;
     }
 
-    // Apply Chinese Remainder Theorem.
-    // Find x such that
-    // x = remainders[0] mod nums[0],
-    // x = remainders[1] mod nums[1],
-    // ... and so on.
-    int64 chinese_remainder(vector<int64> nums, vector<int64> remainders)
-    {
-        int64 product = 1, result = 0;
-        size_t size = nums.size();
-        if (remainders.size() != size)
-            return -1;
-
-        for (int64 &num : nums)
-            product *= num;
-
-        // Apply above formula
-        for (size_t i = 0; i < size; i++) {
-            int64 pp = product / nums[i];
-            result += multiply(multiply(remainders[i], inverse(pp, nums[i]), product), pp, product);
-        }
-
-        return result % product;
-    }
-
-    // Apply Hensel's Lifting.
-    // Assume that f(x) = x^2 - n.
-    // If we know x_1 such that f(x_1) = 0 mod p,
-    // then find x_k such that f(x_k) = 0 mod p^k for given x, n, p, k.
-    // Calculate recursively like x_(k+1) = x_k - f(x_k) * f'(x_1)^-1 mod p^(k+1).
-    int64 hensel_lifting(int64 x, int64 n, int64 p, int64 k)
-    {
-        if (k == 1)
-            return x;
-
-        // f(x) = x^2 - n, f'(x) = 2x.
-        auto function = [n, p](int64 x) -> int64 { return x * x - (n % p); };
-        auto derivative = [](int64 x) -> int64 { return 2 * x; };
-
-        if (derivative(x) % p != 0)
-        {
-            int64 result = x;
-            int64 factor = 1;
-            for (int i = 0; i < k; i++)
-            {
-                factor *= p;
-                // Find modular inverse of f'(x_1) mod p^k
-                int64 inv = inverse(derivative(x), factor);
-                result = (result - function(result) * inv) % factor;
-
-                if (result < 0)
-                    result += factor;
-            }
-
-            return result;
-        }
-
-        return -1;
-    }
-
     // Apply Tonelli-Shanks Algorithm.
     // Find an integer x such that x^2 = n mod p, where p is a prime number.
     int64 tonelli_shanks(int64 n, int64 p)
@@ -302,73 +243,6 @@ namespace QuadraticResidue
 
         // 6. The answer is r, p - r.
     }
-
-    void generateBinaryStrings(int n, vector<int> arr, int i, function<void(vector<int>&, int)>& func)
-    {
-        if (i == n)
-        {
-            func(arr, n);
-            return;
-        }
-
-        arr[i] = 0;
-        generateBinaryStrings(n, arr, i + 1, func);
-
-        arr[i] = 1;
-        generateBinaryStrings(n, arr, i + 1, func);
-    }
-
-    // Solve x^2 = n mod m.
-    vector<int64> quadratic_residue(int64 n, int64 m)
-    {
-        vector<int64> factors, result, factor_group;
-        vector<array<int64, 2>> answers;
-
-        factors = PollardRho::pollard_rho(m);
-        size_t size = factors.size();
-        int64 prev = factors[0], cur = prev, count = 1;
-        for (size_t i = 1; i < size; i++)
-        {
-            if (factors[i] == prev)
-            {
-                cur *= prev;
-                count++;
-                continue;
-            }
-
-            int64 ans = tonelli_shanks(n, prev);
-            if (ans == -1)
-                return result;
-
-            answers.push_back({hensel_lifting(ans, n, prev, count), hensel_lifting(prev - ans, n, prev, count)});
-            factor_group.push_back(cur);
-
-            count = 1;
-            prev = cur = factors[i];
-        }
-
-        if (count > 0)
-        {
-            int64 ans = tonelli_shanks(n, prev);
-            if (ans == -1)
-                return result;
-
-            answers.push_back({hensel_lifting(ans, n, prev, count), hensel_lifting(prev - ans, n, prev, count)});
-            factor_group.push_back(cur);
-        }
-
-        int factor_size = static_cast<int>(factor_group.size());
-        vector<int> binaryString(factor_size);
-        function<void(vector<int>&, int)> do_crt = [&](vector<int> &binary, int size) -> void {
-            vector<int64> remainders;
-            for(int i = 0; i < size; i++)
-                remainders.push_back(answers[i][binary[i]]);
-            result.push_back(chinese_remainder(factor_group, remainders));
-        };
-        generateBinaryStrings(factor_size, binaryString, 0, do_crt);
-
-        return result;
-    }
 }
 
 namespace Cornacchia
@@ -378,13 +252,18 @@ namespace Cornacchia
     // Find integers x, y such that x^2 + d * y^2 = n, where 1 <= d < m.
     pair<int64, int64> cornacchia(int64 d, int64 n)
     {
+        // 0. if n == 2, then d must be 1, and the solution is (1, 1)
+        if (n == 2)
+            return make_pair(1, 1);
+
         // 1. Find r_0 such that r_0^2 = -d mod n.
-        auto possible = quadratic_residue(n - d, n);
+        int64 sol = tonelli_shanks(n - d, n);
+        if (sol == -1)
+            return make_pair(-1, -1);
+
+        vector<int64> possible = {sol, n - sol};
         for(auto &r: possible)
         {
-            if (r > n / 2)
-                r = n - r;
-
             // 2. Let r_1 = n mod r_0
             int64 prev_r = r, prev_prev_r;
             r = n % r;
@@ -418,63 +297,7 @@ namespace Cornacchia
     }
 }
 
-bool find_2_squares(int64 num, vector<int64>& squares)
-{
-    // sqrt * sqrt != n if answer = 2
-    auto root = static_cast<int64>(sqrt(num));
-    if (root * root == num)
-        return false;
-
-    // Use Cornacchia's Algorithm
-    auto answer = Cornacchia::cornacchia(1, num);
-    if(answer.first == -1 || answer.second == -1)
-        return false;
-
-    squares.push_back(answer.first);
-    squares.push_back(answer.second);
-    return true;
-}
-
-bool find_3_squares(int64 num, bool skip_check, vector<int64>& squares)
-{
-    // Factorize num
-    // There are some 4a+3 prime that appears odd number if answer = 3
-    if (!skip_check)
-    {
-        vector<int64> factors;
-        factors = PollardRho::pollard_rho(num);
-
-        int64 cur = 0;
-        int count = 0;
-        for (auto &f: factors) {
-            if (cur < f) {
-                if (count > 0 && (count & 1) == 1)
-                    break;
-
-                cur = f, count = 0;
-            }
-            if (cur == f && (f & 3) == 3)
-                count++;
-        }
-        if (!(count & 1))
-            return false;
-    }
-
-    // Define num = t^2 + x^2 + y^2.
-    // For t >= 1, find out which (num - t^2) can be represented of sum of two square numbers.
-    auto root = static_cast<int64>(sqrt(num));
-    for (int64 i = 1; i <= root; i++)
-    {
-        if(find_2_squares(num - i * i, squares))
-        {
-            squares.push_back(i);
-            break;
-        }
-    }
-    return true;
-}
-
-bool find_4_squares(int64 num, vector<int64>& squares)
+int get_number_of_squares(int64 num, vector<int64>& factors)
 {
     // num = 4^x * (8y + 7) if answer = 4
     int64 remainder = num, quotient = 0;
@@ -483,11 +306,150 @@ bool find_4_squares(int64 num, vector<int64>& squares)
         quotient++;
         remainder >>= 2;
     }
-    if ((remainder & 7) != 7)
-        return false;
+    if ((remainder & 7) == 7)
+    {
+        factors.push_back(quotient);
+        return 4;
+    }
 
-    find_3_squares(num - MillerRabin::fast_pow(4, quotient, num), true, squares);
-    squares.push_back(MillerRabin::fast_pow(2, quotient, num));
+    // Factorize num
+    // There are some 4a+3 prime that appears odd number if answer = 3
+    factors = PollardRho::pollard_rho(num);
+
+    int64 cur = 0;
+    int count = 0;
+    for (auto &f: factors)
+    {
+        if (cur < f)
+        {
+            if (count > 0 && (count & 1) == 1)
+                break;
+
+            cur = f, count = 0;
+        }
+        if (cur == f && (f & 3) == 3)
+            count++;
+    }
+    if (count & 1)
+        return 3;
+
+    // sqrt * sqrt != n if answer = 2
+    auto root = static_cast<int64>(sqrt(num));
+    if (root * root != num)
+        return 2;
+
+    return 1;
+}
+
+bool find_2_squares(int64 num, vector<int64>& factors, vector<int64>& squares, int64 base = 1)
+{
+    // Factorize num.
+    int64 multiplier = 1;
+    vector<int64> single_factors;
+
+    size_t size = factors.size();
+    int count = 0;
+    for (int i = 0; i < size; i++)
+    {
+        if (count == 0)
+        {
+            count++;
+            continue;
+        }
+
+        if (factors[i] == factors[i - 1])
+        {
+            multiplier *= factors[i];
+            count = 0;
+        }
+        else
+            single_factors.push_back(factors[i - 1]);
+    }
+
+    if (count == 1)
+        single_factors.push_back(factors[size - 1]);
+
+    // Use Cornacchia's Algorithm for each single factors.
+    int64 x = 0, y = 0;
+    for (auto &f: single_factors)
+    {
+        auto answer = Cornacchia::cornacchia(1, f);
+        if (answer.first == -1 || answer.second == -1)
+            return false;
+
+        if (x == 0 || y == 0)
+        {
+            x = answer.first;
+            y = answer.second;
+            continue;
+        }
+
+        int64 old_x = x, old_y = y;
+        if (old_x < old_y)
+            swap(old_x, old_y);
+        if (old_x * answer.first - old_y * answer.second > 0)
+        {
+            x = old_x * answer.second + old_y * answer.first;
+            y = old_x * answer.first - old_y * answer.second;
+        }
+        else if (old_x * answer.second - old_y * answer.first > 0)
+        {
+            x = old_x * answer.second - old_y * answer.first;
+            y = old_x * answer.first + old_y * answer.second;
+        }
+        else
+            return false;
+    }
+
+    squares.push_back(x * multiplier * base);
+    squares.push_back(y * multiplier * base);
+    return true;
+}
+
+bool find_3_squares(int64 num, vector<int64>& factors, vector<int64>& squares)
+{
+    // Factorize num.
+    int64 multiplier = 1;
+    int64 single_factors = 1;
+
+    size_t size = factors.size();
+    int count = 0;
+    for (int i = 0; i < size; i++)
+    {
+        if (count == 0)
+        {
+            count++;
+            continue;
+        }
+
+        if (factors[i] == factors[i - 1])
+        {
+            multiplier *= factors[i];
+            count = 0;
+        }
+        else
+            single_factors *= factors[i - 1];
+    }
+
+    if (count == 1)
+        single_factors *= factors[size - 1];
+
+    // Define num = t^2 + x^2 + y^2.
+    // For t >= 1, find out which (num - t^2) can be represented of sum of two square numbers.
+    auto root = static_cast<int64>(single_factors);
+    for (int64 i = 1; i <= root; i++)
+    {
+        int64 n = single_factors - i * i;
+        vector<int64> sub_factors;
+        if(get_number_of_squares(n, sub_factors) != 2)
+            continue;
+
+        if(find_2_squares(num - i * i, sub_factors, squares, multiplier))
+        {
+            squares.push_back(i * multiplier);
+            break;
+        }
+    }
     return true;
 }
 
@@ -496,23 +458,29 @@ int main()
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    vector<int64> squares;
+    vector<int64> squares, factors;
 
     int64 num;
     cin >> num;
 
-    if (find_4_squares(num, squares))
-        cout << "4\n";
-    else if (find_3_squares(num, false, squares))
-        cout << "3\n";
-    else if (find_2_squares(num, squares))
-        cout << "2\n";
-    else
+    int count = get_number_of_squares(num, factors);
+    if (count == 4)
     {
-        cout << "1\n";
-        squares.push_back(static_cast<int64>(sqrt(num)));
-    }
+        int64 element = MillerRabin::fast_pow(2, factors[0],  num);
+        squares.push_back(element);
 
+        int64 square = element * element;
+        factors = PollardRho::pollard_rho(num - square);
+        find_3_squares(num - square, factors, squares);
+    }
+    else if (count == 3)
+        find_3_squares(num, factors, squares);
+    else if (count == 2)
+        find_2_squares(num, factors, squares);
+    else // if (count == 1)
+        squares.push_back(static_cast<int64>(sqrt(num)));
+
+    cout << count << "\n";
     sort(squares.begin(), squares.end());
     copy(squares.begin(), squares.end(), ostream_iterator<int64>(cout, " "));
     return 0;
