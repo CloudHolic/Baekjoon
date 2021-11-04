@@ -1,7 +1,7 @@
 section .data
-	msg: db "Hello World!", 0
+	msg: db "Hello World!", 10
 	
-section .data
+section .text
 	global main
 	extern printf
 	
