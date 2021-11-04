@@ -26,16 +26,19 @@ let main _ =
                 .AppendFormat(formatString, e - 1, s - 1) |> ignore
         | 6 ->        
             result.AppendFormat(formatString, e - 2, s - 2)
-                .AppendFormat(formatString, s + 2, e - 2)
-                .AppendFormat(formatString, e - 4, s + 2)
-                .AppendFormat(formatString, s - 1, e - 4)
-                .AppendFormat(formatString, e - 1, s - 1) |> ignore
+                .AppendFormat(formatString, e - 5, e - 2)
+                .AppendFormat(formatString, s + 1, e - 5)
+                .AppendFormat(formatString, s + 5, s + 1)
+                .AppendFormat(formatString, s - 1, s + 5)
+                .AppendFormat(formatString, e - 1, s - 1)|> ignore
         | 7 ->
             result.AppendFormat(formatString, e - 2, s - 2)
-                .AppendFormat(formatString, s + 2, e - 2)
-                .AppendFormat(formatString, e - 4, s + 2)
-                .AppendFormat(formatString, s - 1, e - 4)
-                .AppendFormat(formatString, e - 1, s - 1) |> ignore
+                .AppendFormat(formatString, s + 4, e - 2)
+                .AppendFormat(formatString, e - 6, s + 4)
+                .AppendFormat(formatString, s + 2, e - 6)
+                .AppendFormat(formatString, e - 5, s + 2)
+                .AppendFormat(formatString, s - 1, e - 5)
+                .AppendFormat(formatString, e - 1, s - 1)|> ignore
         | _ ->
             result.AppendFormat(formatString, e - 2, s - 2)
                 .AppendFormat(formatString, s + 2, e - 2) |> ignore
@@ -47,5 +50,5 @@ let main _ =
     let length = stream.ReadLine() |> int
 
     solve length 1 (2 * length)
-    printfn "%A" result    
+    printf "%A" result    
     0
