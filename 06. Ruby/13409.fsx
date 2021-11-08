@@ -17,15 +17,22 @@ let main _ =
         |> function
             | score -> (score, str.Length)
 
-    let subSum lst =
-        let rec powerset (xs: (int64 * int) list) : (int64 * int) list =
+    let subSum (lst: (int64 * int) list) =
+        let result = Array.zeroCreate (1 <<< lst.Length)
+        let mutable idx = 0
+        let rec powerset (xs: (int64 * int) list) =
             match xs with
-            | [] -> [(0L, 0)]
-            | h::t -> List.fold (fun ys s -> (fst h + fst s, snd h + snd s)::s::ys) [] (powerset t)
+            | [] ->
+                result.[idx] <- (0L, 0)
+                idx <- idx + 1
+            | h::t ->
+                powerset t
+                for i in 0 .. idx - 1 do
+                    result.[i + idx] <- (fst h + fst result.[i], snd h + snd result.[i])
+                idx <- idx * 2
         
         powerset lst
-        |> List.toArray
-        |> Array.sort
+        Array.sortBy (fun x -> fst x) result
 
     use stream = new StreamReader(Console.OpenStandardInput())
 
