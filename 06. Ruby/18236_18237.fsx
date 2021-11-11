@@ -1,6 +1,74 @@
 open System
 open System.IO
 
+// Implement a custom stack that can see the second element
+type Stack<'T> (internalList: list<'T>)=
+    member internal _.internalList = internalList
+
+    member _.Head =
+        match internalList with
+        | head :: _ -> head
+        | _ -> raise (new System.Exception("Stack is empty"))
+
+    member _.TryHead =
+        match internalList with
+        | head :: _ -> Some(head)
+        | _ -> None
+
+    member _.Second =
+        match internalList with
+        | _ :: second :: _ -> second
+        | _ -> raise (new System.Exception("Stack's size < 2"))
+
+    member _.TrySecond =
+        match internalList with
+        | _ :: second :: _ -> Some(second)
+        | _ -> None
+
+    member _.Push x = Stack(x :: internalList)
+
+    member _.Pop =
+        match internalList with
+        | head :: tail -> head, Stack(tail)
+        | _ -> raise (new System.Exception("Stack is empty"))
+
+    member _.TryPop =
+        match internalList with
+        | head :: tail -> Some(head, Stack(tail))
+        | _ -> None
+    
+    member _.IsEmpty = internalList.IsEmpty
+
+    member _.Length = internalList.Length
+
+    interface System.Collections.Generic.IEnumerable<'T> with
+        override _.GetEnumerator() : System.Collections.Generic.IEnumerator<'T> =
+            let e = Seq.ofList internalList
+            e.GetEnumerator()
+
+    interface System.Collections.IEnumerable with
+        override this.GetEnumerator() =
+            (this :> System.Collections.Generic.IEnumerable<'T>).GetEnumerator()
+            :> System.Collections.IEnumerator
+
+module Stack =
+    let empty<'T> : Stack<'T> = Stack<_>([])
+
+    let inline head (s : Stack<'T>) = s.Head
+    let inline tryHead (s : Stack<'T>) = s.TryHead
+
+    let inline second (s : Stack<'T>) = s.Second
+    let inline trySecond (s : Stack<'T>) = s.TrySecond
+
+    let inline push (s : Stack<'T>) (x : 'T) = s.Push x
+
+    let inline pop (s : Stack<'T>) = s.Pop
+    let inline tryPop (s : Stack<'T>) = s.TryPop
+    
+    let inline isEmpty (s : Stack<'T>) = s.IsEmpty
+    
+    let inline length (s : Stack<'T>) = s.Length
+
 // Implement priority queue
 type IPriorityQueue<'T when 'T : comparison> =
     abstract member Peek : unit -> 'T
@@ -38,9 +106,9 @@ type Heap<'T when 'T : comparison> (isDescending: bool, length: int, data: HeapD
             | h, E -> h
             | T(x, xs), T(y, ys) ->
                 if isDescending then
-                    if x <= y then T(y, h1::ys) else T(x, h2::xs)
+                    if x <= y then T(y, h1 :: ys) else T(x, h2 :: xs)
                 else
-                    if x <= y then T(x, h2::xs) else T(y, h1::ys)
+                    if x <= y then T(x, h2 :: xs) else T(y, h1 :: ys)
 
         match data with
         | E -> raise (new System.Exception("Heap is empty"))
@@ -54,7 +122,7 @@ type Heap<'T when 'T : comparison> (isDescending: bool, length: int, data: HeapD
                 xs
                 |> List.fold combine (None, [])
                 |> function
-                    | Some i, l -> i::l
+                    | Some i, l -> i :: l
                     | None, l -> l
                 |> List.fold mergeData E
             Heap(isDescending, (length - 1), tail)
@@ -84,9 +152,9 @@ type Heap<'T when 'T : comparison> (isDescending: bool, length: int, data: HeapD
         | h, E -> Heap(isDescending, newLength, h)
         | T(x, xs), T(y, ys) ->
             if isDescending then
-                if x <= y then Heap(isDescending, newLength, T(y, h1::ys)) else Heap(isDescending, newLength, T(x, h2::xs))
+                if x <= y then Heap(isDescending, newLength, T(y, h1 :: ys)) else Heap(isDescending, newLength, T(x, h2 :: xs))
             else
-                if x <= y then Heap(isDescending, newLength, T(x, h2::xs)) else Heap(isDescending, newLength, T(y, h1::ys))
+                if x <= y then Heap(isDescending, newLength, T(x, h2 :: xs)) else Heap(isDescending, newLength, T(y, h1 :: ys))
 
     interface IPriorityQueue<'T> with        
         member this.Peek() = this.Head
@@ -113,13 +181,11 @@ module PriorityQueue =
     let empty<'T when 'T : comparison> isDescending = Heap<'T>(isDescending, 0, E) :> IPriorityQueue<'T>
 
     let inline peek (pq: IPriorityQueue<'T>) = pq.Peek()
-
     let inline tryPeek (pq: IPriorityQueue<'T>) = pq.TryPeek()
 
     let inline push (pq: IPriorityQueue<'T>) x = pq.Insert x
 
     let inline pop (pq: IPriorityQueue<'T>) = pq.Pop()
-
     let inline tryPop (pq: IPriorityQueue<'T>) = pq.TryPop()
 
     let inline isEmpty (pq: IPriorityQueue<'T>) = pq.IsEmpty
@@ -135,11 +201,13 @@ type HArc = {
     Low: int
     Base: int64
     Mul: int64
-    Num: int64
-    Density: int64 } with
+    mutable Num: int64
+    mutable Density: int64 } with
 
     member this.contains other = this.U <= other.U && this.V <= other.V
     member this.Support = this.Num / this.Density
+
+    static member Default = { Id = 0; U = 0; V = 0; Low = 0; Base = 0L; Mul = 0L; Num = 0L; Density = 0L }
 
     override this.GetHashCode () = hash this.Support
 
@@ -170,7 +238,7 @@ let main _ =
     let mutable last = 0L
     let size = stream.ReadLine() |> int |> function | s -> s + 1
     let matrix = Array.init (size + 2) (fun i ->
-        if i = 0 || i > size then 0L
+        if i = 0 || i >= size then 0L
         else
             stream.ReadLine().Split()
             |> Array.map int64
@@ -181,21 +249,166 @@ let main _ =
     matrix.[size] <- last
 
     let solve =
+        let rotate (arr: 'T array) i startIdx endIdx =
+            let tempArr = Array.copy arr.[startIdx .. i - 1]
+            arr.[startIdx .. i - 1] <- arr.[i .. endIdx]
+            arr.[i .. endIdx] <- tempArr
+        
+        // Prepare
+        let minIdx = matrix |> Seq.indexed |> Seq.minBy (fun x -> if snd x = 0L then Int64.MaxValue else snd x) |> fst
+        rotate matrix minIdx 1 size
+        matrix.[size + 1] <- matrix.[1]
+        
         let cp: int64 array = Array.zeroCreate (size + 2)
-        let prepare =
-            let minIdx = matrix |> Seq.indexed |> Seq.minBy (fun x -> if snd x = 0L then Int64.MaxValue else snd x) |> fst
+        for i in 1 .. size + 1 do
+            cp.[i] <- matrix.[i] * matrix.[i - 1] + cp.[i - 1]
 
-            matrix.[size + 1] <- matrix.[1]
-            for i in 1 .. size + 1 do
-                cp.[i] <- matrix.[i] * matrix.[i - 1] + cp.[i - 1]
+        let mutable list = []
+        
+        // Sweep
+        let mutable stack = Stack.empty<int>
+        let mutable temp = []
 
-        let sweep =
-            0
+        for i in 1 .. size do
+            while Stack.length stack >= 2 && matrix.[Stack.head stack] > matrix.[i] do
+                temp <- (Stack.second stack, i) :: temp
+                stack <- snd <| Stack.pop stack
+            stack <- Stack.push stack i
 
-        let result =
-            0
+        while Stack.length stack >= 4 do
+            temp <- (1, Stack.second stack) :: temp
+            stack <- snd <| Stack.pop stack
 
-        0
+        temp
+        |> List.rev
+        |> List.iter (fun x ->
+            if fst x = 1 || snd x = 1 then ()
+            else list <- x :: list)
+
+        // Build HArc tree
+        let hArcs = Array.init (List.length list + 2) (fun _ -> HArc.Default)
+        let mutable numHArc = 0
+        let newHArc u v =
+            // Assume that u <= v
+            numHArc <- numHArc + 1
+            hArcs.[numHArc] <- { 
+                Id = numHArc;
+                U = u; V = v;
+                Low = if matrix.[u] < matrix.[v] then u else v;
+                Mul = matrix.[u] * matrix.[v];
+                Base = cp.[v] - cp.[u] - hArcs.[numHArc].Mul;
+                Num = 0L; Density = 0L }
+
+        let childs = Array.init (List.length list + 2) (fun _ -> Stack.empty<int>)
+        let mutable stack = Stack.empty<int>
+        newHArc <|| (1, size + 1) // root
+        list
+        |> List.rev
+        |> List.iter (fun x ->
+            newHArc <|| (fst x, snd x)
+            while not <| Stack.isEmpty stack && hArcs.[numHArc].contains hArcs.[Stack.head stack] do
+                Stack.pop stack
+                |> function
+                    | v, s ->
+                        childs.[numHArc] <- Stack.push childs.[numHArc] v
+                        stack <- s
+            stack <- Stack.push stack numHArc)
+
+        while not <| Stack.isEmpty stack do
+            Stack.pop stack
+            |> function
+                | v, s -> 
+                    childs.[1] <- Stack.push childs.[1] v
+                    stack <- s
+
+        // Find an answer
+        let mutable pqs = 0
+        let sub = Array.zeroCreate (size + 2)
+        let qid = Array.zeroCreate (size + 2)
+        let pq = Array.init (size + 2) (fun _ -> PriorityQueue.empty<HArc> true)
+        let con = Array.init (size + 2) (fun _ -> Stack.empty<HArc>)
+
+        let Multiply node =
+            if node = 1 then
+                matrix.[1] * matrix.[2] + matrix.[1] * matrix.[size]
+            elif hArcs.[node].U = hArcs.[node].Low then
+                if Stack.isEmpty con.[hArcs.[node].U] || not <| hArcs.[node].contains (Stack.head con.[hArcs.[node].U])
+                then matrix.[hArcs.[node].U] * matrix.[hArcs.[node].U + 1]
+                else (Stack.head con.[hArcs.[node].U]).Mul
+            else
+                if Stack.isEmpty con.[hArcs.[node].V] || not <| hArcs.[node].contains (Stack.head con.[hArcs.[node].V])
+                then matrix.[hArcs.[node].V] * matrix.[hArcs.[node].V - 1]
+                else (Stack.head con.[hArcs.[node].V]).Mul
+
+        let addArc node harc =
+            pq.[qid.[node]] <- PriorityQueue.push pq.[qid.[node]] harc
+            con.[harc.U] <- Stack.push con.[harc.U] harc
+            con.[harc.V] <- Stack.push con.[harc.V] harc
+
+        let removeArc node =
+            PriorityQueue.pop pq.[qid.[node]]
+            |> function
+                | v, q ->
+                    con.[v.U] <- snd <| Stack.pop con.[v.U]
+                    con.[v.V] <- snd <| Stack.pop con.[v.V]
+                    pq.[qid.[node]] <- q
+
+        let mergePq node =
+            let mutable maxChild = -1
+
+            childs.[node]
+            |> Seq.iter (fun x -> if maxChild = -1 || sub.[maxChild] < sub.[x] then maxChild <- x)
+
+            qid.[node] <- qid.[maxChild]
+
+            childs.[node]
+            |> Seq.iter (fun x ->
+                if x <> maxChild then
+                    while not <| PriorityQueue.isEmpty pq.[qid.[x]] do
+                        PriorityQueue.pop pq.[qid.[x]]
+                        |> function
+                            | v, q ->
+                                pq.[qid.[node]] <- PriorityQueue.push pq.[qid.[node]] v
+                                pq.[qid.[x]] <- q)
+
+        let rec dfs node =
+            sub.[node] <- 1
+            if Stack.isEmpty childs.[node]
+            then
+                pqs <- pqs + 1
+                qid.[node] <- pqs
+                hArcs.[node].Density <- hArcs.[node].Base
+                hArcs.[node].Num <- matrix.[hArcs.[node].Low] * (hArcs.[node].Density * hArcs.[node].Mul - Multiply node)
+                addArc node hArcs.[node]
+            else
+                hArcs.[node].Density <- hArcs.[node].Base
+                childs.[node]
+                |> Seq.iter (fun x -> 
+                    dfs x
+                    sub.[node] <- sub.[node] + sub.[x]
+                    hArcs.[node].Density <- hArcs.[x].Base)
+
+                hArcs.[node].Num <- matrix.[hArcs.[node].Low] * (hArcs.[node].Density * hArcs.[node].Mul - Multiply node)
+                mergePq node
+
+                while not <| PriorityQueue.isEmpty pq.[qid.[node]] && hArcs.[node] <= PriorityQueue.peek pq.[qid.[node]] do
+                    let top = PriorityQueue.peek pq.[qid.[node]]
+                    hArcs.[node].Density <- hArcs.[node].Density + top.Density
+                    removeArc node
+                    hArcs.[node].Num <- hArcs.[node].Num + top.Num
+
+                addArc node hArcs.[node]
+
+        let mutable answer = 0L
+        dfs 1
+        while not <| PriorityQueue.isEmpty pq.[qid.[1]] do
+            PriorityQueue.pop pq.[qid.[1]]
+            |> function
+                | v, q ->
+                    answer <- answer + v.Num
+                    pq.[qid.[1]] <- q
+
+        answer
 
     match size with
     | s when s < 2 -> printfn "0"
