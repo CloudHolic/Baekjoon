@@ -11,34 +11,34 @@ let main _ =
 
     if b <= c
     then
-        printfn "%d" <| (Array.sum arr) * b
+        printfn "%d" <| int64 b * (Array.sumBy (fun x -> int64 x) arr)
     else
-        let mutable answer = 0
+        let mutable answer = 0L
         for i in 0 .. size - 1 do
             if arr.[i + 1] > arr.[i + 2] then
                 let minimum = min <|| (arr.[i], arr.[i + 1] - arr.[i + 2])
-                answer <- answer + minimum * (b + c)
+                answer <- answer + int64 (b + c) * int64 minimum
                 arr.[i] <- arr.[i] - minimum
                 arr.[i + 1] <- arr.[i + 1] - minimum
 
                 let minimum = min3 <||| (arr.[i], arr.[i + 1], arr.[i + 2])
-                answer <- answer + minimum * (b + c + c)
+                answer <- answer + int64 (b + c + c) * int64 minimum
                 arr.[i] <- arr.[i] - minimum
                 arr.[i + 1] <- arr.[i + 1] - minimum
                 arr.[i + 2] <- arr.[i + 2] - minimum
             else
                 let minimum = min3 <||| (arr.[i], arr.[i + 1], arr.[i + 2])
-                answer <- answer + minimum * (b + c + c)
+                answer <- answer + int64 (b + c + c) * int64 minimum
                 arr.[i] <- arr.[i] - minimum
                 arr.[i + 1] <- arr.[i + 1] - minimum
                 arr.[i + 2] <- arr.[i + 2] - minimum
 
                 let minimum = min <|| (arr.[i], arr.[i + 1])
-                answer <- answer + minimum * (b + c)
+                answer <- answer + int64 (b + c) * int64 minimum
                 arr.[i] <- arr.[i] - minimum
                 arr.[i + 1] <- arr.[i + 1] - minimum
 
-            answer <- answer + arr.[i] * b
+            answer <- answer + int64 b * int64 arr.[i]
 
         printfn "%d" answer
 
