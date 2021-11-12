@@ -1,7 +1,7 @@
 open System
 open System.IO
 
-// Implement a custom stack that can see the second element
+// Implement a custom stack that can iterate & see the second element
 type Stack<'T> (internalList: list<'T>)=
     member internal _.internalList = internalList
 
@@ -10,20 +10,10 @@ type Stack<'T> (internalList: list<'T>)=
         | head :: _ -> head
         | _ -> raise (new System.Exception("Stack is empty"))
 
-    member _.TryHead =
-        match internalList with
-        | head :: _ -> Some(head)
-        | _ -> None
-
     member _.Second =
         match internalList with
         | _ :: second :: _ -> second
         | _ -> raise (new System.Exception("Stack's size < 2"))
-
-    member _.TrySecond =
-        match internalList with
-        | _ :: second :: _ -> Some(second)
-        | _ -> None
 
     member _.Push x = Stack(x :: internalList)
 
@@ -31,20 +21,14 @@ type Stack<'T> (internalList: list<'T>)=
         match internalList with
         | head :: tail -> head, Stack(tail)
         | _ -> raise (new System.Exception("Stack is empty"))
-
-    member _.TryPop =
-        match internalList with
-        | head :: tail -> Some(head, Stack(tail))
-        | _ -> None
     
     member _.IsEmpty = internalList.IsEmpty
 
     member _.Length = internalList.Length
 
     interface System.Collections.Generic.IEnumerable<'T> with
-        override _.GetEnumerator() : System.Collections.Generic.IEnumerator<'T> =
-            let e = Seq.ofList internalList
-            e.GetEnumerator()
+        override _.GetEnumerator() : System.Collections.Generic.IEnumerator<'T> =            
+            (internalList :> System.Collections.Generic.IEnumerable<'T>).GetEnumerator()
 
     interface System.Collections.IEnumerable with
         override this.GetEnumerator() =
@@ -55,29 +39,26 @@ module Stack =
     let empty<'T> : Stack<'T> = Stack<_>([])
 
     let inline head (s : Stack<'T>) = s.Head
-    let inline tryHead (s : Stack<'T>) = s.TryHead
 
     let inline second (s : Stack<'T>) = s.Second
-    let inline trySecond (s : Stack<'T>) = s.TrySecond
 
     let inline push (s : Stack<'T>) (x : 'T) = s.Push x
 
     let inline pop (s : Stack<'T>) = s.Pop
-    let inline tryPop (s : Stack<'T>) = s.TryPop
     
     let inline isEmpty (s : Stack<'T>) = s.IsEmpty
     
     let inline length (s : Stack<'T>) = s.Length
 
-// Implement priority queue
+// Implement a custom priority queue that can merge with other priority queue
 type IPriorityQueue<'T when 'T : comparison> =
     abstract member Peek : unit -> 'T
-    abstract member TryPeek : unit -> 'T option
 
     abstract member Insert : 'T -> IPriorityQueue<'T>
     
     abstract member Pop : unit -> 'T * IPriorityQueue<'T>
-    abstract member TryPop : unit -> ('T * IPriorityQueue<'T>) option
+
+    abstract member Merge : IPriorityQueue<'T> -> IPriorityQueue<'T>
         
     abstract member IsEmpty : bool with get
         
@@ -91,11 +72,6 @@ type Heap<'T when 'T : comparison> (isDescending: bool, length: int, data: HeapD
         match data with
         | E -> raise (new System.Exception("Heap is empty"))
         | T(x, _) -> x
-
-    member _.TryHead =
-        match data with
-        | E -> None
-        | T(x, _) -> Some x
 
     member _.Insert x = Heap.merge isDescending (length + 1) (T(x, [])) data
 
@@ -132,10 +108,9 @@ type Heap<'T when 'T : comparison> (isDescending: bool, length: int, data: HeapD
         | E -> raise (new System.Exception("Heap is empty"))
         | T(x, _) -> x, this.Tail()
 
-    member this.TryPop() =
-        match data with
-        | E -> None
-        | T(x, _) -> Some(x, this.Tail())
+    member _.Merge (other: Heap<'T>) =
+        if isDescending = other.IsDescending then Heap.merge isDescending (length + other.Length) data other.heapData
+        else failwith "These two heaps have different sort orders"
 
     member _.IsEmpty =
         match data with
@@ -156,19 +131,17 @@ type Heap<'T when 'T : comparison> (isDescending: bool, length: int, data: HeapD
             else
                 if x <= y then Heap(isDescending, newLength, T(x, h2 :: xs)) else Heap(isDescending, newLength, T(y, h1 :: ys))
 
-    interface IPriorityQueue<'T> with        
+    interface IPriorityQueue<'T> with
         member this.Peek() = this.Head
-        member this.TryPeek() = this.TryHead
 
         member this.Insert element = this.Insert element :> IPriorityQueue<'T>
 
         member this.Pop() = 
             let element, newHeap = this.Pop()
             element, (newHeap :> IPriorityQueue<'T>)
-        member this.TryPop() =
-            match this.TryPop() with
-            | Some(element, newHeap) -> Some(element, newHeap :> IPriorityQueue<'T>)
-            | None -> None
+
+        member this.Merge other =
+            this.Merge (other :?> Heap<'T>) :> IPriorityQueue<'T>
 
         member this.IsEmpty = this.IsEmpty
         member this.Length = this.Length
@@ -181,12 +154,12 @@ module PriorityQueue =
     let empty<'T when 'T : comparison> isDescending = Heap<'T>(isDescending, 0, E) :> IPriorityQueue<'T>
 
     let inline peek (pq: IPriorityQueue<'T>) = pq.Peek()
-    let inline tryPeek (pq: IPriorityQueue<'T>) = pq.TryPeek()
 
     let inline push (pq: IPriorityQueue<'T>) x = pq.Insert x
 
     let inline pop (pq: IPriorityQueue<'T>) = pq.Pop()
-    let inline tryPop (pq: IPriorityQueue<'T>) = pq.TryPop()
+
+    let inline Merge (pq1: IPriorityQueue<'T>) (pq2: IPriorityQueue<'T>) = pq1.Merge pq2
 
     let inline isEmpty (pq: IPriorityQueue<'T>) = pq.IsEmpty
 
@@ -287,7 +260,7 @@ let main _ =
 
         // Build HArc tree
         let listSize = List.length list
-        let hArcs = Array.init (listSize + 2) (fun _ -> HArc.Default)
+        let hArcs = Array.zeroCreate (listSize + 2)
         let mutable numHArc = 0
         let newHArc u v =
             // Assume that u <= v
@@ -303,6 +276,7 @@ let main _ =
 
         let childs = Array.init (List.length list + 2) (fun _ -> Stack.empty<int>)
         let mutable stack = Stack.empty<int>
+        hArcs.[0] <- HArc.Default
         newHArc <|| (1, size + 1) // root
         list
         |> List.iter (fun x ->
@@ -365,12 +339,7 @@ let main _ =
             childs.[node]
             |> Seq.iter (fun x ->
                 if x <> maxChild then
-                    while not <| PriorityQueue.isEmpty pq.[qid.[x]] do
-                        PriorityQueue.pop pq.[qid.[x]]
-                        |> function
-                            | v, q ->
-                                pq.[qid.[node]] <- PriorityQueue.push pq.[qid.[node]] v
-                                pq.[qid.[x]] <- q)
+                        pq.[qid.[node]] <- PriorityQueue.Merge pq.[qid.[node]] pq.[qid.[x]])
 
         let rec dfs node =
             sub.[node] <- 1
