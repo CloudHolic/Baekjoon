@@ -337,9 +337,7 @@ let main _ =
             qid.[node] <- qid.[maxChild]
 
             childs.[node]
-            |> Seq.iter (fun x ->
-                if x <> maxChild then
-                        pq.[qid.[node]] <- PriorityQueue.Merge pq.[qid.[node]] pq.[qid.[x]])
+            |> Seq.iter (fun x -> if x <> maxChild then pq.[qid.[node]] <- PriorityQueue.Merge pq.[qid.[node]] pq.[qid.[x]])
 
         let rec dfs node =
             sub.[node] <- 1
