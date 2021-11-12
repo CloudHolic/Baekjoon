@@ -27,7 +27,7 @@ type Stack<'T> (internalList: list<'T>)=
     member _.Length = internalList.Length
 
     interface System.Collections.Generic.IEnumerable<'T> with
-        override _.GetEnumerator() : System.Collections.Generic.IEnumerator<'T> =            
+        override _.GetEnumerator() : System.Collections.Generic.IEnumerator<'T> =
             (internalList :> System.Collections.Generic.IEnumerable<'T>).GetEnumerator()
 
     interface System.Collections.IEnumerable with
