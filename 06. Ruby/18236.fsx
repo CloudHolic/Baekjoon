@@ -204,7 +204,7 @@ type HArc = {
     mutable Num: int64
     mutable Density: int64 } with
 
-    member this.contains other = this.U <= other.U && this.V <= other.V
+    member this.contains other = this.U <= other.U && other.V <= this.V
     member this.Support = this.Num / this.Density
 
     static member Default = { Id = 0; U = 0; V = 0; Low = 0; Base = 0L; Mul = 0L; Num = 0L; Density = 0L }
@@ -250,9 +250,10 @@ let main _ =
 
     let solve =
         let rotate (arr: 'T array) i startIdx endIdx =
+            let diff = i - startIdx
             let tempArr = Array.copy arr.[startIdx .. i - 1]
-            arr.[startIdx .. i - 1] <- arr.[i .. endIdx]
-            arr.[i .. endIdx] <- tempArr
+            arr.[startIdx .. endIdx - diff] <- arr.[i .. endIdx]
+            arr.[endIdx - diff + 1 .. endIdx] <- tempArr
         
         // Prepare
         let minIdx = matrix |> Seq.indexed |> Seq.minBy (fun x -> if snd x = 0L then Int64.MaxValue else snd x) |> fst
@@ -280,30 +281,30 @@ let main _ =
             stack <- snd <| Stack.pop stack
 
         temp
-        |> List.rev
         |> List.iter (fun x ->
             if fst x = 1 || snd x = 1 then ()
             else list <- x :: list)
 
         // Build HArc tree
-        let hArcs = Array.init (List.length list + 2) (fun _ -> HArc.Default)
+        let listSize = List.length list
+        let hArcs = Array.init (listSize + 2) (fun _ -> HArc.Default)
         let mutable numHArc = 0
         let newHArc u v =
             // Assume that u <= v
             numHArc <- numHArc + 1
+            let mul = matrix.[u] * matrix.[v]
             hArcs.[numHArc] <- { 
                 Id = numHArc;
                 U = u; V = v;
                 Low = if matrix.[u] < matrix.[v] then u else v;
-                Mul = matrix.[u] * matrix.[v];
-                Base = cp.[v] - cp.[u] - hArcs.[numHArc].Mul;
+                Mul = mul;
+                Base = cp.[v] - cp.[u] - mul;
                 Num = 0L; Density = 0L }
 
         let childs = Array.init (List.length list + 2) (fun _ -> Stack.empty<int>)
         let mutable stack = Stack.empty<int>
         newHArc <|| (1, size + 1) // root
         list
-        |> List.rev
         |> List.iter (fun x ->
             newHArc <|| (fst x, snd x)
             while not <| Stack.isEmpty stack && hArcs.[numHArc].contains hArcs.[Stack.head stack] do
@@ -323,9 +324,9 @@ let main _ =
 
         // Find an answer
         let mutable pqs = 0
-        let sub = Array.zeroCreate (size + 2)
-        let qid = Array.zeroCreate (size + 2)
-        let pq = Array.init (size + 2) (fun _ -> PriorityQueue.empty<HArc> true)
+        let sub = Array.zeroCreate (listSize + 2)
+        let qid = Array.zeroCreate (listSize + 2)
+        let pq = Array.init (listSize + 2) (fun _ -> PriorityQueue.empty<HArc> true)
         let con = Array.init (size + 2) (fun _ -> Stack.empty<HArc>)
 
         let Multiply node =
@@ -378,7 +379,7 @@ let main _ =
                 pqs <- pqs + 1
                 qid.[node] <- pqs
                 hArcs.[node].Density <- hArcs.[node].Base
-                hArcs.[node].Num <- matrix.[hArcs.[node].Low] * (hArcs.[node].Density * hArcs.[node].Mul - Multiply node)
+                hArcs.[node].Num <- matrix.[hArcs.[node].Low] * (hArcs.[node].Density + hArcs.[node].Mul - Multiply node)
                 addArc node hArcs.[node]
             else
                 hArcs.[node].Density <- hArcs.[node].Base
@@ -386,10 +387,16 @@ let main _ =
                 |> Seq.iter (fun x -> 
                     dfs x
                     sub.[node] <- sub.[node] + sub.[x]
-                    hArcs.[node].Density <- hArcs.[x].Base)
+                    hArcs.[node].Density <- hArcs.[node].Density - hArcs.[x].Base)
 
-                hArcs.[node].Num <- matrix.[hArcs.[node].Low] * (hArcs.[node].Density * hArcs.[node].Mul - Multiply node)
+                hArcs.[node].Num <- matrix.[hArcs.[node].Low] * (hArcs.[node].Density + hArcs.[node].Mul - Multiply node)
                 mergePq node
+
+                while not <| PriorityQueue.isEmpty pq.[qid.[node]] && (PriorityQueue.peek pq.[qid.[node]]).Support >= matrix.[hArcs.[node].Low] do
+                    let top = PriorityQueue.peek pq.[qid.[node]]
+                    hArcs.[node].Density <- hArcs.[node].Density + top.Density
+                    removeArc node
+                    hArcs.[node].Num <- matrix.[hArcs.[node].Low] * (hArcs.[node].Density + hArcs.[node].Mul - Multiply node)
 
                 while not <| PriorityQueue.isEmpty pq.[qid.[node]] && hArcs.[node] <= PriorityQueue.peek pq.[qid.[node]] do
                     let top = PriorityQueue.peek pq.[qid.[node]]
