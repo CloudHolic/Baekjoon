@@ -13,9 +13,9 @@ let main _ =
         prev <- (6 * prev - 4 * pprev) % 1000
         if prev < 0 then prev <- prev + 1000
         pprev <- temp
-        prev)    
+        prev)
 
-    let tests = stream.ReadLine() |> int  
+    let tests = stream.ReadLine() |> int
 
     for i in 1 .. tests do
         let n = stream.ReadLine() |> int64
