@@ -5,7 +5,6 @@ let modulo = 1000000007L
 
 let Add x y = (x + y) % modulo
 let Mul x y = (x * y) % modulo
-let Mod x = (x % modulo + modulo) % modulo
 
 type Matrix (N: int, M: int) =
     member _.N = N
