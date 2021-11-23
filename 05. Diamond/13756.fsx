@@ -30,15 +30,15 @@ let main _ =
         for i in 1 .. k do
             let n = (1 <<< i) - 1
             let combinate = combArr |> List.take i |> List.fold (fun acc x -> Mul acc x) 1L
-            let duplicate = 
+            let duplicate =
                 [1 .. i - 1]
                 |> List.scan (+) 0
                 |> List.map (fun x -> int64 <| n - x)
                 |> List.fold (fun acc x -> Mul acc x) 1L
                 |> Inverse
-            answer <- Add answer (Mul combinate duplicate)            
+            answer <- Add answer (Mul combinate duplicate)
         answer
-                
+
     let max = stream.ReadLine() |> int
     solve max
     |> printfn "%d"
