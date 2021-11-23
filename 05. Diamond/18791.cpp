@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <cmath>
-#include <numeric>
 #include <iostream>
+#include <numeric>
 #include <vector>
 
 using namespace std;
@@ -67,7 +67,7 @@ vector<bool> solve_prime(int p, vector<int> nums)
 {
 	vector<bool> result(2 * p - 1, false);
 	vector<int> idx(2 * p - 1, 0);
-	
+
 	iota(idx.begin(), idx.end(), 0);
 	sort(idx.begin(), idx.end(), [&](int n, int m) { return nums[n] < nums[m]; });
 
@@ -81,18 +81,9 @@ vector<bool> solve_prime(int p, vector<int> nums)
 		}
 	}
 
-	int cur_mod = 0;
-	for (int i = 0; i < p; i++)
-	{
-		cur_mod += nums[idx[i]];
-		cur_mod %= p;
-		result[idx[i]] = true;
-	}
+	// a_0 = b_0 = idx[0]
+	// a_i = idx[i] / b_i = idx[i + p - 1] (i = 1 ~ p-1)
 
-	if (cur_mod == 0)
-		return result;
-
-	vector<bool> sub_sums(p);
 
 
 	return result;
