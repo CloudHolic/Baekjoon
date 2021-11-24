@@ -81,44 +81,36 @@ vector<bool> solve_prime(const int p, const vector<int>& nums)
 		}
 	}
 
-	vector<bool> sub_sums(p);
 	vector<vector<int>> sums_list(p);
 	for (auto& v : sums_list)
-		v = vector<int>(p);
+		v = vector<int>(p, -1);
 
 	// a_0 = b_0 = idx[0]
 	// a_i = idx[i] / b_i = idx[i + p - 1] (i = 1 ~ p-1)
-	sub_sums[nums[idx[0]] % p] = true;
-	sums_list[nums[idx[0]]][0] = idx[0];	// s_0 = idx[0] only
+	sums_list[0][nums[idx[0]]] = idx[0];	// s_0 = idx[0] only
 	for (int i = 1; i < p; i++)
 	{
-		vector<bool> temp_sums(p);
 		for (int j = 0; j < p; j++)
 		{
-			if (!sub_sums[j])
+			if (sums_list[i - 1][j] == -1)
 				continue;
 
 			const int a_sum = (j + nums[idx[i]]) % p;
 			const int b_sum = (j + nums[idx[i + p - 1]]) % p;
 
-			if (!temp_sums[a_sum])
-			{
-				temp_sums[a_sum] = true;
-				sums_list[a_sum][i] = idx[i];
-			}
-			if (b_sum != a_sum && !temp_sums[b_sum])
-			{
-				temp_sums[b_sum] = true;
-				sums_list[b_sum][i] = idx[i + p - 1];
-			}
+			if (sums_list[i][a_sum] == -1)
+				sums_list[i][a_sum] = idx[i];
+
+			if (b_sum != a_sum && sums_list[i][b_sum] == -1)
+				sums_list[i][b_sum] = idx[i + p - 1];
 		}
-		sub_sums = move(temp_sums);
 	}
 
 	for (int i = p - 1, cur_sum = 0; i >= 0; i--)
 	{
-		result[sums_list[cur_sum][i]] = true;
-		cur_sum = (cur_sum - nums[sums_list[cur_sum][i]] + p) % p;
+		int cur_idx = sums_list[i][cur_sum];
+		result[cur_idx] = true;
+		cur_sum = (cur_sum - nums[cur_idx] + p) % p;
 	}
 
 	return result;
