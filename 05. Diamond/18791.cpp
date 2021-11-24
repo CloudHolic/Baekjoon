@@ -46,7 +46,7 @@ vector<bool> solve_composite(const int a, const int b, const vector<int>& nums)
 	}
 
 	for (int i = 0; i < 2 * b - 1; i++)
-		sub_sums[i] = sub_sums[i] % b;
+		sub_sums[i] = sub_sums[i] / a % b;
 
 	const vector<bool> cur_answer = solve(b, sub_sums);
 
@@ -108,9 +108,8 @@ vector<bool> solve_prime(const int p, const vector<int>& nums)
 
 	for (int i = p - 1, cur_sum = 0; i >= 0; i--)
 	{
-		int cur_idx = sums_list[i][cur_sum];
-		result[cur_idx] = true;
-		cur_sum = (cur_sum - nums[cur_idx] + p) % p;
+		result[sums_list[i][cur_sum]] = true;
+		cur_sum = (cur_sum - nums[sums_list[i][cur_sum]] + p) % p;
 	}
 
 	return result;
