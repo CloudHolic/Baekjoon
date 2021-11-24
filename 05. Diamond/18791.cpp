@@ -81,39 +81,45 @@ vector<bool> solve_prime(const int p, const vector<int>& nums)
 		}
 	}
 
+	vector<bool> sub_sums(p);
+	vector<vector<int>> sums_list(p);
+	for (auto& v : sums_list)
+		v = vector<int>(p);
+
 	// a_0 = b_0 = idx[0]
 	// a_i = idx[i] / b_i = idx[i + p - 1] (i = 1 ~ p-1)
-	vector<pair<bool, vector<int>>> sub_sums(p);
-	sub_sums[nums[idx[0]] % p] = make_pair(true, vector<int>{idx[0]});	// s_0 = idx[0] only
+	sub_sums[nums[idx[0]] % p] = true;
+	sums_list[nums[idx[0]]][0] = idx[0];	// s_0 = idx[0] only
 	for (int i = 1; i < p; i++)
 	{
-		vector<pair<bool, vector<int>>> temp_sums(p);
-		for(int j = 0; j < p; j++)
+		vector<bool> temp_sums(p);
+		for (int j = 0; j < p; j++)
 		{
-			if (!sub_sums[j].first)
+			if (!sub_sums[j])
 				continue;
-			
+
 			const int a_sum = (j + nums[idx[i]]) % p;
 			const int b_sum = (j + nums[idx[i + p - 1]]) % p;
 
-			if (!temp_sums[a_sum].first)
+			if (!temp_sums[a_sum])
 			{
-				temp_sums[a_sum] = make_pair(true, vector<int>());
-				temp_sums[a_sum].second = sub_sums[j].second;
-				temp_sums[a_sum].second.push_back(idx[i]);
+				temp_sums[a_sum] = true;
+				sums_list[a_sum][i] = idx[i];
 			}
-			if (b_sum != a_sum && !temp_sums[b_sum].first)
+			if (b_sum != a_sum && !temp_sums[b_sum])
 			{
-				temp_sums[b_sum] = make_pair(true, vector<int>());
-				temp_sums[b_sum].second = move(sub_sums[j].second);
-				temp_sums[b_sum].second.push_back(idx[i + p - 1]);
+				temp_sums[b_sum] = true;
+				sums_list[b_sum][i] = idx[i + p - 1];
 			}
 		}
-		sub_sums.swap(temp_sums);
+		sub_sums = move(temp_sums);
 	}
 
-	for (const int& r: sub_sums[0].second)
-		result[r] = true;
+	for (int i = p - 1, cur_sum = 0; i >= 0; i--)
+	{
+		result[sums_list[cur_sum][i]] = true;
+		cur_sum = (cur_sum - nums[sums_list[cur_sum][i]] + p) % p;
+	}
 
 	return result;
 }
