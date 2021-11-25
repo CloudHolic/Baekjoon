@@ -78,27 +78,29 @@ let main _ =
             dup
 
         match checkDuplicate with
-        | -1 ->
-            let sumList = Array2D.init p p (fun _ _ -> -1)
-            sumList.[0, nums.[idx.[0]]] <- idx.[0]
-            for i in 1 .. p - 1 do
-                for j in 0 .. p - 1 do
-                    match sumList.[i - 1, j] with
-                    | -1 -> ()
-                    | _ ->
-                        let a_sum = (j + nums.[idx.[i]]) % p
-                        let b_sum = (j + nums.[idx.[i + p - 1]]) % p
-                        
-                        if sumList.[i, a_sum] = -1 then
-                            sumList.[i, a_sum] <- idx.[i]
+        | -1 -> ()
+            // Modify this code to bit-wise
 
-                        if b_sum <> a_sum && sumList.[i, b_sum] = -1 then
-                            sumList.[i, b_sum] <- idx.[i + p - 1]
+            // let sumList = Array2D.init p p (fun _ _ -> -1)
+            // sumList.[0, nums.[idx.[0]]] <- idx.[0]
+            // for i in 1 .. p - 1 do
+            //     for j in 0 .. p - 1 do
+            //         match sumList.[i - 1, j] with
+            //         | -1 -> ()
+            //         | _ ->
+            //             let a_sum = (j + nums.[idx.[i]]) % p
+            //             let b_sum = (j + nums.[idx.[i + p - 1]]) % p
+                        
+            //             if sumList.[i, a_sum] = -1 then
+            //                 sumList.[i, a_sum] <- idx.[i]
+
+            //             if b_sum <> a_sum && sumList.[i, b_sum] = -1 then
+            //                 sumList.[i, b_sum] <- idx.[i + p - 1]
             
-            let mutable curSum = 0
-            for i in p - 1 .. -1 .. 0 do
-                result.[sumList.[i, curSum]] <- true
-                curSum <- (curSum - nums.[sumList.[i, curSum]] + p) % p
+            // let mutable curSum = 0
+            // for i in p - 1 .. -1 .. 0 do
+            //     result.[sumList.[i, curSum]] <- true
+            //     curSum <- (curSum - nums.[sumList.[i, curSum]] + p) % p
         | i ->
             for j in i .. i + p - 1 do
                 result.[idx.[j]] <- true
