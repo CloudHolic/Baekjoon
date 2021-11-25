@@ -77,30 +77,42 @@ let main _ =
                 | _ -> ())
             dup
 
+        let inline setBit (arr: uint64[]) (x: int) = arr.[x >>> 6] <- arr.[x >>> 6] ||| (1UL <<< (x &&& 63))
+        let inline getBit (arr: uint64[]) (x: int) = (arr.[x >>> 6] &&& (1UL <<< (x &&& 63))) <> 0UL
+
+        let inline leftShift (arr: uint64[]) = ()
+        let inline rightShift (arr: uint64[]) = ()
+
         match checkDuplicate with
-        | -1 -> ()
+        | -1 ->
+            let sumList = Array.init p (fun _ -> Array.init ((p + 63) / 64) (fun _ -> 0UL))
+            setBit sumList.[0] nums.[idx.[0]]
+
+            for i in 1 .. p - 1 do
+                let d = nums.[idx.[i + p - 1]] - nums.[idx.[i]]
+
+                ()
             // Modify this code to bit-wise
-
-            // let sumList = Array2D.init p p (fun _ _ -> -1)
-            // sumList.[0, nums.[idx.[0]]] <- idx.[0]
-            // for i in 1 .. p - 1 do
-            //     for j in 0 .. p - 1 do
-            //         match sumList.[i - 1, j] with
-            //         | -1 -> ()
-            //         | _ ->
-            //             let a_sum = (j + nums.[idx.[i]]) % p
-            //             let b_sum = (j + nums.[idx.[i + p - 1]]) % p
+            //let sumList = Array2D.init p p (fun _ _ -> -1)
+            //sumList.[0, nums.[idx.[0]]] <- idx.[0]
+            //for i in 1 .. p - 1 do
+            //    for j in 0 .. p - 1 do
+            //        match sumList.[i - 1, j] with
+            //        | -1 -> ()
+            //        | _ ->
+            //            let a_sum = (j + nums.[idx.[i]]) % p
+            //            let b_sum = (j + nums.[idx.[i + p - 1]]) % p
                         
-            //             if sumList.[i, a_sum] = -1 then
-            //                 sumList.[i, a_sum] <- idx.[i]
+            //            if sumList.[i, a_sum] = -1 then
+            //                sumList.[i, a_sum] <- idx.[i]
 
-            //             if b_sum <> a_sum && sumList.[i, b_sum] = -1 then
-            //                 sumList.[i, b_sum] <- idx.[i + p - 1]
+            //            if b_sum <> a_sum && sumList.[i, b_sum] = -1 then
+            //                sumList.[i, b_sum] <- idx.[i + p - 1]
             
-            // let mutable curSum = 0
-            // for i in p - 1 .. -1 .. 0 do
-            //     result.[sumList.[i, curSum]] <- true
-            //     curSum <- (curSum - nums.[sumList.[i, curSum]] + p) % p
+            //let mutable curSum = 0
+            //for i in p - 1 .. -1 .. 0 do
+            //    result.[sumList.[i, curSum]] <- true
+            //    curSum <- (curSum - nums.[sumList.[i, curSum]] + p) % p
         | i ->
             for j in i .. i + p - 1 do
                 result.[idx.[j]] <- true
