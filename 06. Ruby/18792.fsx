@@ -1,20 +1,21 @@
 open System
 open System.Collections.Generic
 open System.IO
-open System.Runtime.CompilerServices
 open System.Text
 
 [<EntryPoint>]
 let main _ =
-    let sumList: uint64[][] = Array.init 50000 (fun _ -> Array.zeroCreate 782)
+    let sumList: uint64[,] = Array2D.zeroCreate 50000 782
 
-    let initBits index length = Array.Clear(sumList.[index], 0, length)
+    let initBits index length = Array.Clear(sumList, 782 * index, length)
 
-    let copyBits index length = Buffer.BlockCopy(sumList.[index - 1], 0, sumList.[index], 0, length * sizeof<uint64>)
+    let copyBits index length =
+        let offset = 782 * sizeof<uint64>
+        Buffer.BlockCopy(sumList, (index - 1) * offset, sumList, index * offset, length * sizeof<uint64>)
 
-    let setBit index x = sumList.[index].[x >>> 6] <- sumList.[index].[x >>> 6] ||| (1UL <<< (63 - (x &&& 63)))
+    let setBit index x = sumList.[index, (x >>> 6)] <- sumList.[index, (x >>> 6)] ||| (1UL <<< (63 - (x &&& 63)))
 
-    let getBit index x = (sumList.[index].[x >>> 6] &&& (1UL <<< (63 - (x &&& 63)))) <> 0UL
+    let getBit index x = (sumList.[index, (x >>> 6)] &&& (1UL <<< (63 - (x &&& 63)))) <> 0UL
 
     let leftShift p index shift =
         let bits, remainder, q, r = p + 63 >>> 6, p &&& 63, shift >>> 6, shift &&& 63
@@ -23,34 +24,34 @@ let main _ =
         | true ->
             [0 .. bits - q - 2]
             |> List.iter (fun x ->
-                sumList.[index].[x] <- sumList.[index].[x] ||| (sumList.[index - 1].[x + q] <<< r) ||| (sumList.[index - 1].[x + q + 1] >>> 64 - r))
-            sumList.[index].[bits - q - 1] <- sumList.[index].[bits - q - 1] ||| (sumList.[index - 1].[bits - 1] <<< r)
+                sumList.[index, x] <- sumList.[index, x] ||| (sumList.[(index - 1), (x + q)] <<< r) ||| (sumList.[(index - 1), (x + q + 1)] >>> 64 - r))
+            sumList.[index, (bits - q - 1)] <- sumList.[index, (bits - q - 1)] ||| (sumList.[(index - 1), (bits - 1)] <<< r)
         | _ ->
             [0 .. bits - q - 1]
             |> List.iter (fun x ->
-                sumList.[index].[x] <- sumList.[index].[x] ||| sumList.[index - 1].[x + q])
+                sumList.[index, x] <- sumList.[index, x] ||| sumList.[(index - 1), (x + q)])
 
         if remainder > 0 then
             let mask = (1UL <<< (64 - remainder)) - 1UL
-            sumList.[index].[bits - 1] <- sumList.[index].[bits - 1] &&& (~~~ mask)
+            sumList.[index, (bits - 1)] <- sumList.[index, (bits - 1)] &&& (~~~ mask)
 
     let rightShift p index shift =
         let bits, remainder, q, r = p + 63 >>> 6, p &&& 63, shift >>> 6, shift &&& 63
 
         match r > 0 with
         | true ->        
-            sumList.[index].[q] <- sumList.[index].[q] ||| (sumList.[index - 1].[0] >>> r)
+            sumList.[index, q] <- sumList.[index, q] ||| (sumList.[(index - 1), 0] >>> r)
             [1 .. bits - q - 1]
             |> List.iter (fun x ->
-                sumList.[index].[x + q] <- sumList.[index].[x + q] ||| (sumList.[index - 1].[x - 1] <<< 64 - r) ||| (sumList.[index - 1].[x] >>> r))
+                sumList.[index, (x + q)] <- sumList.[index, (x + q)] ||| (sumList.[(index - 1), (x - 1)] <<< 64 - r) ||| (sumList.[(index - 1), x] >>> r))
         | _ ->
             [0 .. bits - q - 1]
             |> List.iter (fun x ->
-                sumList.[index].[x + q] <- sumList.[index].[x + q] ||| sumList.[index - 1].[x])
+                sumList.[index, (x + q)] <- sumList.[index, (x + q)] ||| sumList.[(index - 1), x])
 
         if remainder > 0 then
             let mask = (1UL <<< (64 - remainder)) - 1UL
-            sumList.[index].[bits - 1] <- sumList.[index].[bits - 1] &&& (~~~ mask)
+            sumList.[index, (bits - 1)] <- sumList.[index, (bits - 1)] &&& (~~~ mask)
 
     let rec solve n nums : bool[] =
         let root = float n |> sqrt |> int
@@ -71,7 +72,7 @@ let main _ =
         let indexQueue = Queue<int>([|2 * a - 1 .. 2 * a * b - 2|])
 
         let subSums = Array.zeroCreate (2 * b - 1)
-        let subAnswers = Array.init (2 * b - 1) (fun _ -> Array.zeroCreate a)
+        let subAnswers = Array2D.zeroCreate (2 * b - 1) a
 
         for i in 0 .. 2 * b - 2 do
             let curAnswer = Array.init (2 * a - 1) (fun x -> nums.[curIndexes.[x]] % a) |> solve a
@@ -81,7 +82,7 @@ let main _ =
                 match curAnswer.[x] with
                 | true ->
                     subSums.[i] <- subSums.[i] + nums.[curIndexes.[x]]
-                    subAnswers.[i].[idx] <- curIndexes.[x]
+                    subAnswers.[i, idx] <- curIndexes.[x]
                     idx <- idx + 1
                     if i < 2 * b - 2 then
                         curIndexes.[x] <- indexQueue.Dequeue()
@@ -92,7 +93,7 @@ let main _ =
         |> solve b
         |> Array.iteri (fun i x -> 
             match x with
-            | true -> subAnswers.[i] |> Array.iter (fun y -> result.[y] <- true)
+            | true -> subAnswers.[i, *] |> Array.iter (fun y -> result.[y] <- true)
             | _ -> ())
 
         result
