@@ -20,27 +20,27 @@ void left_shift(int p, int index, int x)
 	const uint64(&src)[782] = sums_list[index - 1];
 	uint64(&dest)[782] = sums_list[index];
 
-	const int bit_count = p + 63 >> 6;
+	const int bits = p + 63 >> 6;
 	const int remainder = p & 63;
 	const int q = x >> 6;
 	const int r = x & 63;
 
 	if (r)
 	{
-		for (int i = 0; i < bit_count - q - 1; i++)
+		for (int i = 0; i < bits - q - 1; i++)
 			dest[i] |= src[i + q] << r | src[i + q + 1] >> 64 - r;
-		dest[bit_count - q - 1] |= src[bit_count - 1] << r;
+		dest[bits - q - 1] |= src[bits - 1] << r;
 	}
 	else
 	{
-		for (int i = 0; i < bit_count - q; i++)
+		for (int i = 0; i < bits - q; i++)
 			dest[i] |= src[i + q];
 	}
 
 	if (remainder)
 	{
 		const uint64 mask = (1UL << 64 - remainder) - 1;
-		dest[bit_count - 1] &= ~mask;
+		dest[bits - 1] &= ~mask;
 	}	
 }
 

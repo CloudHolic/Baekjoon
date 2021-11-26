@@ -1,9 +1,57 @@
 open System
+open System.Collections.Generic
 open System.IO
+open System.Runtime.CompilerServices
 open System.Text
 
 [<EntryPoint>]
 let main _ =
+    let sumList: uint64[][] = Array.init 50000 (fun _ -> Array.zeroCreate 782)
+
+    let initBits index length = Array.Clear(sumList.[index], 0, length)
+
+    let copyBits index length = Buffer.BlockCopy(sumList.[index - 1], 0, sumList.[index], 0, length * sizeof<uint64>)
+
+    let setBit index x = sumList.[index].[x >>> 6] <- sumList.[index].[x >>> 6] ||| (1UL <<< (63 - (x &&& 63)))
+
+    let getBit index x = (sumList.[index].[x >>> 6] &&& (1UL <<< (63 - (x &&& 63)))) <> 0UL
+
+    let leftShift p index shift =
+        let bits, remainder, q, r = p + 63 >>> 6, p &&& 63, shift >>> 6, shift &&& 63
+
+        match r > 0 with
+        | true ->
+            [0 .. bits - q - 2]
+            |> List.iter (fun x ->
+                sumList.[index].[x] <- sumList.[index].[x] ||| (sumList.[index - 1].[x + q] <<< r) ||| (sumList.[index - 1].[x + q + 1] >>> 64 - r))
+            sumList.[index].[bits - q - 1] <- sumList.[index].[bits - q - 1] ||| (sumList.[index - 1].[bits - 1] <<< r)
+        | _ ->
+            [0 .. bits - q - 1]
+            |> List.iter (fun x ->
+                sumList.[index].[x] <- sumList.[index].[x] ||| sumList.[index - 1].[x + q])
+
+        if remainder > 0 then
+            let mask = (1UL <<< (64 - remainder)) - 1UL
+            sumList.[index].[bits - 1] <- sumList.[index].[bits - 1] &&& (~~~ mask)
+
+    let rightShift p index shift =
+        let bits, remainder, q, r = p + 63 >>> 6, p &&& 63, shift >>> 6, shift &&& 63
+
+        match r > 0 with
+        | true ->        
+            sumList.[index].[q] <- sumList.[index].[q] ||| (sumList.[index - 1].[0] >>> r)
+            [1 .. bits - q - 1]
+            |> List.iter (fun x ->
+                sumList.[index].[x + q] <- sumList.[index].[x + q] ||| (sumList.[index - 1].[x - 1] <<< 64 - r) ||| (sumList.[index - 1].[x] >>> r))
+        | _ ->
+            [0 .. bits - q - 1]
+            |> List.iter (fun x ->
+                sumList.[index].[x + q] <- sumList.[index].[x + q] ||| sumList.[index - 1].[x])
+
+        if remainder > 0 then
+            let mask = (1UL <<< (64 - remainder)) - 1UL
+            sumList.[index].[bits - 1] <- sumList.[index].[bits - 1] &&& (~~~ mask)
+
     let rec solve n nums : bool[] =
         let root = float n |> sqrt |> int
         let rec findFirstFactor n cur =
@@ -18,47 +66,33 @@ let main _ =
 
     and solveComposite a b (nums: int[]) : bool[] =
         let result: bool[] = Array.zeroCreate (2 * a * b - 1)
+        
+        let curIndexes = Array.init (2 * a - 1) (fun x -> x)
+        let indexQueue = Queue<int>([|2 * a - 1 .. 2 * a * b - 2|])
 
-        let indexUsed: bool[] = Array.zeroCreate (2 * a * b - 1)
-        let subAnswers: Tuple<int, int list>[] = Array.init (2 * b - 1) (fun _ -> 0, [])
+        let subSums = Array.zeroCreate (2 * b - 1)
+        let subAnswers = Array.init (2 * b - 1) (fun _ -> Array.zeroCreate a)
 
         for i in 0 .. 2 * b - 2 do
-            let mutable curNums = []
+            let curAnswer = Array.init (2 * a - 1) (fun x -> nums.[curIndexes.[x]] % a) |> solve a
+            let mutable idx = 0
+            [0 .. 2 * a - 2]
+            |> List.iter (fun x ->
+                match curAnswer.[x] with
+                | true ->
+                    subSums.[i] <- subSums.[i] + nums.[curIndexes.[x]]
+                    subAnswers.[i].[idx] <- curIndexes.[x]
+                    idx <- idx + 1
+                    if i < 2 * b - 2 then
+                        curIndexes.[x] <- indexQueue.Dequeue()
+                | _ -> ())
+            subSums.[i] <- subSums.[i] / a % b
 
-            let mutable flag, j = true, 0
-            while flag do
-                match indexUsed.[j], List.length curNums with
-                | true, _ -> ()
-                | _, s when s < 2 * a - 1 ->
-                    curNums <- (nums.[j] % a) :: curNums
-                | _ -> flag <- false
-
-                match j with
-                | j when j = 2 * a * b - 2 -> flag <- false
-                | _ -> j <- j + 1
-            
-            let curAnswer = curNums |> List.rev |> Array.ofList |> solve a
-            let mutable flag, j, k = true, 0, 0
-            while flag do
-                match indexUsed.[j], curAnswer.[k] with
-                | true, _ -> ()
-                | _, true ->
-                    let tup = subAnswers.[i]
-                    subAnswers.[i] <- (nums.[j] + fst tup, j :: snd tup)
-                    indexUsed.[j] <- true
-                    k <- k + 1
-                | _ -> k <- k + 1
-
-                match j, k with
-                | j, k when j = 2 * a * b - 1 || k = 2 * a - 1 -> flag <- false
-                | _ -> j <- j + 1
-
-        subAnswers
-        |> Array.map (fun x -> fst x / a % b)
+        subSums
         |> solve b
         |> Array.iteri (fun i x -> 
             match x with
-            | true -> snd subAnswers.[i] |> List.iter (fun y -> result.[y] <- true)
+            | true -> subAnswers.[i] |> Array.iter (fun y -> result.[y] <- true)
             | _ -> ())
 
         result
@@ -77,42 +111,39 @@ let main _ =
                 | _ -> ())
             dup
 
-        let inline setBit (arr: uint64[]) (x: int) = arr.[x >>> 6] <- arr.[x >>> 6] ||| (1UL <<< (x &&& 63))
-        let inline getBit (arr: uint64[]) (x: int) = (arr.[x >>> 6] &&& (1UL <<< (x &&& 63))) <> 0UL
-
-        let inline leftShift (arr: uint64[]) = ()
-        let inline rightShift (arr: uint64[]) = ()
-
         match checkDuplicate with
         | -1 ->
-            let sumList = Array.init p (fun _ -> Array.init ((p + 63) / 64) (fun _ -> 0UL))
-            setBit sumList.[0] nums.[idx.[0]]
+            let mutable initMod = 0
+            [0 .. p - 1]
+            |> List.iter (fun x ->
+                initMod <- (initMod + nums.[idx.[x]]) % p
+                result.[idx.[x]] <- true)
 
-            for i in 1 .. p - 1 do
-                let d = nums.[idx.[i + p - 1]] - nums.[idx.[i]]
+            if initMod <> 0 then
+                let bits = (p + 63) >>> 6
+                initBits 0 bits
+                setBit 0 initMod
 
-                ()
-            // Modify this code to bit-wise
-            //let sumList = Array2D.init p p (fun _ _ -> -1)
-            //sumList.[0, nums.[idx.[0]]] <- idx.[0]
-            //for i in 1 .. p - 1 do
-            //    for j in 0 .. p - 1 do
-            //        match sumList.[i - 1, j] with
-            //        | -1 -> ()
-            //        | _ ->
-            //            let a_sum = (j + nums.[idx.[i]]) % p
-            //            let b_sum = (j + nums.[idx.[i + p - 1]]) % p
-                        
-            //            if sumList.[i, a_sum] = -1 then
-            //                sumList.[i, a_sum] <- idx.[i]
+                let mutable step, flag = 1, true
+                while flag do
+                    let diff = nums.[idx.[step + p - 1]] - nums.[idx.[step]]
+                    copyBits step bits
+                    rightShift p step diff
+                    leftShift p step (p - diff)
 
-            //            if b_sum <> a_sum && sumList.[i, b_sum] = -1 then
-            //                sumList.[i, b_sum] <- idx.[i + p - 1]
-            
-            //let mutable curSum = 0
-            //for i in p - 1 .. -1 .. 0 do
-            //    result.[sumList.[i, curSum]] <- true
-            //    curSum <- (curSum - nums.[sumList.[i, curSum]] + p) % p
+                    if getBit step 0 then flag <- false
+                    else step <- step + 1
+                    
+                let mutable curSum = 0
+                [step .. -1 .. 1]
+                |> List.iter (fun x ->
+                    let diff = nums.[idx.[x + p - 1]] - nums.[idx.[x]]
+                    let tempSum = (curSum - diff + p) % p
+                    
+                    if getBit (x - 1) tempSum then
+                        result.[idx.[x]] <- false
+                        result.[idx.[x + p - 1]] <- true
+                        curSum <- tempSum)
         | i ->
             for j in i .. i + p - 1 do
                 result.[idx.[j]] <- true
