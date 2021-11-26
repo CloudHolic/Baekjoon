@@ -19,17 +19,18 @@ let main _ =
 
     let leftShift p index shift =
         let bits, remainder, q, r = p + 63 >>> 6, p &&& 63, shift >>> 6, shift &&& 63
+        let mutable i = 0
 
         match r > 0 with
         | true ->
-            [0 .. bits - q - 2]
-            |> List.iter (fun x ->
-                sumList.[index, x] <- sumList.[index, x] ||| (sumList.[(index - 1), (x + q)] <<< r) ||| (sumList.[(index - 1), (x + q + 1)] >>> 64 - r))
+            while i < bits - q - 1 do
+                sumList.[index, i] <- sumList.[index, i] ||| (sumList.[(index - 1), (i + q)] <<< r) ||| (sumList.[(index - 1), (i + q + 1)] >>> 64 - r)
+                i <- i + 1
             sumList.[index, (bits - q - 1)] <- sumList.[index, (bits - q - 1)] ||| (sumList.[(index - 1), (bits - 1)] <<< r)
         | _ ->
-            [0 .. bits - q - 1]
-            |> List.iter (fun x ->
-                sumList.[index, x] <- sumList.[index, x] ||| sumList.[(index - 1), (x + q)])
+            while i < bits - q do
+                sumList.[index, i] <- sumList.[index, i] ||| sumList.[(index - 1), (i + q)]
+                i <- i + 1
 
         if remainder > 0 then
             let mask = (1UL <<< (64 - remainder)) - 1UL
@@ -39,15 +40,17 @@ let main _ =
         let bits, remainder, q, r = p + 63 >>> 6, p &&& 63, shift >>> 6, shift &&& 63
 
         match r > 0 with
-        | true ->        
+        | true ->
+            let mutable i = 1
             sumList.[index, q] <- sumList.[index, q] ||| (sumList.[(index - 1), 0] >>> r)
-            [1 .. bits - q - 1]
-            |> List.iter (fun x ->
-                sumList.[index, (x + q)] <- sumList.[index, (x + q)] ||| (sumList.[(index - 1), (x - 1)] <<< 64 - r) ||| (sumList.[(index - 1), x] >>> r))
+            while i < bits - q do
+                sumList.[index, (i + q)] <- sumList.[index, (i + q)] ||| (sumList.[(index - 1), (i - 1)] <<< 64 - r) ||| (sumList.[(index - 1), i] >>> r)
+                i <- i + 1
         | _ ->
-            [0 .. bits - q - 1]
-            |> List.iter (fun x ->
-                sumList.[index, (x + q)] <- sumList.[index, (x + q)] ||| sumList.[(index - 1), x])
+            let mutable i = 0
+            while i < bits - q do
+                sumList.[index, (i + q)] <- sumList.[index, (i + q)] ||| sumList.[(index - 1), i]
+                i <- i + 1
 
         if remainder > 0 then
             let mask = (1UL <<< (64 - remainder)) - 1UL
@@ -74,20 +77,23 @@ let main _ =
         let subSums = Array.zeroCreate (2 * b - 1)
         let subAnswers = Array2D.zeroCreate (2 * b - 1) a
 
-        for i in 0 .. 2 * b - 2 do
+        let mutable i = 0
+        while i < 2 * b - 1 do
             let curAnswer = Array.init (2 * a - 1) (fun x -> nums.[curIndexes.[x]] % a) |> solve a
-            let mutable idx = 0
-            [0 .. 2 * a - 2]
-            |> List.iter (fun x ->
-                match curAnswer.[x] with
+            let mutable idx, j = 0, 0
+            while j < 2 * a - 1 do
+                match curAnswer.[j] with
                 | true ->
-                    subSums.[i] <- subSums.[i] + nums.[curIndexes.[x]]
-                    subAnswers.[i, idx] <- curIndexes.[x]
+                    subSums.[i] <- subSums.[i] + nums.[curIndexes.[j]]
+                    subAnswers.[i, idx] <- curIndexes.[j]
                     idx <- idx + 1
                     if i < 2 * b - 2 then
-                        curIndexes.[x] <- indexQueue.Dequeue()
-                | _ -> ())
+                        curIndexes.[j] <- indexQueue.Dequeue()
+                | _ -> ()
+                j <- j + 1
+
             subSums.[i] <- subSums.[i] / a % b
+            i <- i + 1
 
         subSums
         |> solve b
@@ -103,22 +109,22 @@ let main _ =
         let idx = Array.init (2 * p - 1) (fun i -> i) |> Array.sortBy (fun x -> nums.[x])
 
         let checkDuplicate =
-            let mutable dup = -1
-            [0 .. p - 1]
-            |> List.iter (fun x ->
-                match dup, x with
-                | i, _ when i > 0 -> ()
+            let mutable dup, i = -1, 0
+            while i < p do
+                match dup, i with
+                | d, _ when d > 0 -> ()
                 | -1, x when nums.[idx.[x]] = nums.[idx.[x + p - 1]] -> dup <- x
-                | _ -> ())
+                | _ -> ()
+                i <- i + 1
             dup
 
         match checkDuplicate with
         | -1 ->
-            let mutable initMod = 0
-            [0 .. p - 1]
-            |> List.iter (fun x ->
-                initMod <- (initMod + nums.[idx.[x]]) % p
-                result.[idx.[x]] <- true)
+            let mutable initMod, i = 0, 0
+            while i < p do
+                initMod <- (initMod + nums.[idx.[i]]) % p
+                result.[idx.[i]] <- true
+                i <- i + 1
 
             if initMod <> 0 then
                 let bits = (p + 63) >>> 6
@@ -135,16 +141,16 @@ let main _ =
                     if getBit step 0 then flag <- false
                     else step <- step + 1
                     
-                let mutable curSum = 0
-                [step .. -1 .. 1]
-                |> List.iter (fun x ->
-                    let diff = nums.[idx.[x + p - 1]] - nums.[idx.[x]]
+                let mutable curSum, j = 0, step
+                while j > 0 do
+                    let diff = nums.[idx.[j + p - 1]] - nums.[idx.[j]]
                     let tempSum = (curSum - diff + p) % p
                     
-                    if getBit (x - 1) tempSum then
-                        result.[idx.[x]] <- false
-                        result.[idx.[x + p - 1]] <- true
-                        curSum <- tempSum)
+                    if getBit (j - 1) tempSum then
+                        result.[idx.[j]] <- false
+                        result.[idx.[j + p - 1]] <- true
+                        curSum <- tempSum
+                    j <- j - 1
         | i ->
             for j in i .. i + p - 1 do
                 result.[idx.[j]] <- true
