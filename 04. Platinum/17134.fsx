@@ -1,9 +1,11 @@
 open System
+open System.Collections
 open System.IO
 open System.Numerics
+open System.Text
 
 module FastFourierTransform =
-    let maxSize = 524288
+    let maxSize = 2097152
     let pi = Math.PI
     let tau = 2. * pi
 
@@ -89,40 +91,46 @@ module FastFourierTransform =
         let struct (_, t) = Details.loop (n >>> 1) ln 1 n vs vs1 invert
         if invert then t |> Array.map (fun i -> i / Complex(float n, 0.)) else t
 
-    let multiply arr1 arr2 =
-        let size = Array.length arr1 + Array.length arr2 - 1
-        let size = Math.Pow(2., (Math.Log (float size) / Math.Log 2.) |> Math.Ceiling) |> int
-
-        let coeff1 = Array.init size (fun i -> if i < Array.length arr1 then Complex(float arr1.[i], 0.) else Complex(0., 0.))
-        let coeff2 = Array.init size (fun i -> if i < Array.length arr2 then Complex(float arr2.[i], 0.) else Complex(0., 0.))
-
-        (fft coeff1 false, fft coeff2 false)
-        ||> Array.map2 (fun x y -> x * y)
-        |> function
-            | res -> fft res true |> Array.map (fun x -> Math.Floor (x.Real + 0.5) |> int)
-
 [<EntryPoint>]
 let main _ =
-    use stream = new StreamReader(Console.OpenStandardInput())
-    let n = stream.ReadLine() |> int
-    let nums : Complex array = Array.zeroCreate 524288
+    let getPrimes nmax =
+        let sieve = new BitArray((nmax/2) + 1, true)
+        let result = new ResizeArray<int>(nmax / 10)
+        let upper = int (sqrt (float nmax))   
+    
+        if nmax > 1 then result.Add(2) 
 
-    nums.[0] <- Complex(1., 0.)
-    for _ = 1 to n do
-        let num = stream.ReadLine() |> int
-        nums.[num] <- Complex(1., 0.)
+        let mutable m = 1
+        while 2 * m + 1 <= nmax do
+           if sieve.[m] then
+               let n = 2 * m + 1
+               if n <= upper then 
+                   let mutable i = m
+                   while 2 * i < nmax do sieve.[i] <- false; i <- i + n
+               result.Add n
+           m <- m + 1
+    
+        result
+
+    use stream = new StreamReader(Console.OpenStandardInput())
+    let result = new StringBuilder()
+       
+    let t = stream.ReadLine() |> int
+    let x : Complex array = Array.zeroCreate 2097152
+    let y : Complex array = Array.zeroCreate 2097152
+    
+    for i in getPrimes 1000000 do
+        x.[i] <- Complex(1., 0.)
+        if i < 500000 then y.[2 * i] <- Complex(1., 0.)
 
     let res = 
-        nums
-        |> function | list -> FastFourierTransform.fft list false
-        |> Array.map (fun x -> x * x)
+        (FastFourierTransform.fft x false, FastFourierTransform.fft y false)
+        ||> Array.map2 (fun x y -> x * y)
         |> function | list -> FastFourierTransform.fft list true |> Array.map (fun x -> Math.Floor (x.Real + 0.5) |> int)
-    
-    let m = stream.ReadLine() |> int
-    let mutable count = 0
-    for _ = 1 to m do
+        
+    for _ = 1 to t do
         let cur = stream.ReadLine() |> int
-        if res.[cur] > 0 then count <- count + 1
-    
-    printfn "%d" count
+        result.AppendFormat("{0}\n", res.[cur]) |> ignore
+
+    printfn "%A" result
     0
