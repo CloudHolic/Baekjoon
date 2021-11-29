@@ -233,21 +233,25 @@ let main _ =
         rotate matrix minIdx 1 size
         matrix.[size + 1] <- matrix.[1]
         
+        let mutable i = 1
         let cp: int64 array = Array.zeroCreate (size + 2)
-        for i in 1 .. size + 1 do
+
+        while i < size + 2 do
             cp.[i] <- matrix.[i] * matrix.[i - 1] + cp.[i - 1]
+            i <- i + 1
 
         let mutable list = []
         
         // Sweep
         let mutable stack = Stack.empty<int>
-        let mutable temp = []
+        let mutable temp, i = [], 1
 
-        for i in 1 .. size do
+        while i < size + 1 do
             while Stack.length stack >= 2 && matrix.[Stack.head stack] > matrix.[i] do
                 temp <- (Stack.second stack, i) :: temp
                 stack <- snd <| Stack.pop stack
             stack <- Stack.push stack i
+            i <- i + 1
 
         while Stack.length stack >= 4 do
             temp <- (1, Stack.second stack) :: temp
