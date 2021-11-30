@@ -51,28 +51,39 @@ module FastFourierTransform =
 
 [<EntryPoint>]
 let main _ =
-    let getPrimes nmax =
-        let sieve = new BitArray((nmax/2) + 1, true)
-        let result = new ResizeArray<int>(nmax / 10)
-        let upper = int (sqrt (float nmax))   
+    let isPrime n =
+        match n with
+        | n when n = 2 || n = 3 -> true
+        | n when n % 2 = 0 -> false
+        | n ->
+            let root = float n |> sqrt |> int
+            let mutable result = true
+            for i in 3 .. 2 .. root do
+                if n % i = 0 then result <- false
+            result
+
+    let getPrimes max =
+        let sieve = new BitArray((max / 2) + 1, true)
+        let result = new ResizeArray<int>(max / 10)
+        let upper = int (sqrt (float max))   
     
-        if nmax > 1 then result.Add(2) 
+        if max > 1 then result.Add(2) 
 
         let mutable m = 1
-        while 2 * m + 1 <= nmax do
+        while 2 * m + 1 <= max do
            if sieve.[m] then
                let n = 2 * m + 1
                if n <= upper then 
                    let mutable i = m
-                   while 2 * i < nmax do sieve.[i] <- false; i <- i + n
+                   while 2 * i < max do sieve.[i] <- false; i <- i + n
                result.Add n
            m <- m + 1
     
         result
-
+                    
     use stream = new StreamReader(Console.OpenStandardInput())
     let result = new StringBuilder()
-       
+
     let t = stream.ReadLine() |> int
     let x : Complex array = Array.zeroCreate 2097152
     let square : Complex array = Array.zeroCreate 2097152
@@ -103,10 +114,10 @@ let main _ =
     for _ = 1 to t do
         let cur = stream.ReadLine() |> int
         let mutable evenDup = 0
-        if primeList.Contains(cur - 4) then evenDup <- 1
+        if cur - 4 |> isPrime then evenDup <- 1
 
         let mutable dup = 0
-        if cur % 3 = 0 && primeList.Contains(cur / 3) then dup <- 1
+        if cur % 3 = 0 && cur / 3 |> isPrime then dup <- 1
 
         let semiDup = (dupMul.[(cur - 1) / 2 - 1] - dup)
         let noDup = (mul.[(cur - 1) / 2 - 1] - 3 * semiDup - dup) / 6
