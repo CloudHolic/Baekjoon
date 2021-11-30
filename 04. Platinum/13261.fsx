@@ -15,8 +15,8 @@ let main _ =
 
     let relation i j = int64 (j - i + 1) * (sum.[j] - sum.[i - 1])
 
-    let cache = Array2D.init 801 8001 (fun x y -> if x = 1 && y <= m then relation x y else 0L)
-    let cache2 : int64[,] = Array2D.zeroCreate 801 8001
+    let cache = Array2D.init (n + 1) (m + 1) (fun x y -> if x = 1 && y <= m then relation x y else 0L)
+    let cache2 : int64[,] = Array2D.zeroCreate (n + 1) (m + 1)
 
     let rec solve step s e l r =
         if s <= e then
