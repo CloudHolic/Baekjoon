@@ -20,7 +20,7 @@ let main _ =
                 ends.[i] <- nums.[1]
 
     let policy1 =
-        let prefix = Array.zeroCreate (maxStation + 1)        
+        let prefix = Array.zeroCreate (maxStation + 1)
         let suffix = Array.zeroCreate (maxStation + 1)
 
         for i = 0 to n - 1 do
