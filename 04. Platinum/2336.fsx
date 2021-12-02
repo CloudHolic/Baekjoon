@@ -79,8 +79,7 @@ type Score = {
     override this.Equals obj =
         match obj with
         | :? Score as other -> (this :> IEquatable<_>).Equals other
-        |_ -> false
-    
+        |_ -> false    
 
 [<EntryPoint>]
 let main _ = 
