@@ -1,7 +1,7 @@
 open System
 open System.IO
 
-type SegmentTree<'T> = class
+type SegmentTree<'T> = 
     val private op: 'T -> 'T -> 'T
     val private init: 'T
     val private node: 'T array
@@ -51,7 +51,6 @@ type SegmentTree<'T> = class
                 this.node.[k]
 
         update 1 1 this.size |> ignore
-end
 
 [<CustomComparison; CustomEquality>]
 type Score = {
