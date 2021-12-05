@@ -18,17 +18,12 @@ type PersistentSegmentTree<'T> =
             rootCount = _rootCount
             maxSize = _maxSize
             roots = Array.create (_rootCount + 1) 0
-            nodes = new ResizeArray<Node<'T>>(0)
+            nodes = new ResizeArray<Node<'T>>(2)
             lastRoot = 0
-        } then this.Init
+        } then this.Init()
 
-    member private this.Init =
+    member private this.Init() =
         let rec init k st en =
-            if st = 1 && en = this.maxSize then
-                this.nodes.Clear()
-                this.nodes.Add(Node<'T>.CreateNew this.init)
-                this.nodes.Add(Node<'T>.CreateNew this.init)
-
             if st <> en then
                 let mid = (st + en) >>> 1
 
@@ -42,6 +37,7 @@ type PersistentSegmentTree<'T> =
                 (this.nodes.[k].Right, mid + 1, en) |||> init
 
         this.roots.[0] <- 1
+        this.nodes.AddRange([|Node<'T>.CreateNew this.init; Node<'T>.CreateNew this.init|])
         init 1 1 this.maxSize
 
     member this.Query root left right =
@@ -84,6 +80,12 @@ type PersistentSegmentTree<'T> =
         this.nodes.[this.roots.[root]].Value <- (this.nodes.[this.roots.[root]].Value, value) ||> this.op
         update this.roots.[root] 1 this.maxSize
 
+    member this.Clear() =
+        Array.Clear(this.roots, 0, this.rootCount + 1)
+        this.nodes.Clear()
+        this.lastRoot <- 0
+        this.Init()
+
 and Node<'T> = {
     mutable Value: 'T
     mutable Left: int
@@ -124,22 +126,25 @@ let main _ =
     let result = new StringBuilder()
 
     let t = stream.ReadLine().Trim() |> int
-    let mutable answer = 0
 
-    let parseInts (str: string) = str.Trim().Split() |> Array.map int
+    let parseInts (str: string) = str.Trim().Split() |> Array.map int    
+    let pst = PersistentSegmentTree<int>(100002, 100001, (+), 0)
 
     let rec solve times =
         if times > 0 then
+            pst.Clear()
+            let mutable answer = 0
             let n, m = stream.ReadLine().Trim().Split() |> Array.map int |> function | nums -> nums.[0], nums.[1]
-            let pst = PersistentSegmentTree<int>(100001, 100001, (+), 0)
             
-            Array.init n (fun _ -> stream.ReadLine() |> parseInts |> function | nums -> { X = nums.[0]; Y = nums.[1] })
+            Array.init n (fun _ -> stream.ReadLine() |> parseInts |> function | nums -> { X = nums.[0] + 1; Y = nums.[1] + 1 })
             |> Array.sort
             |> Array.iter (fun x -> pst.Update x.Y x.X 1)
 
+            pst.Update 100002 0 0
+
             for _ = 1 to m do
                 let region = stream.ReadLine() |> parseInts
-                answer <- answer + pst.Query region.[3] region.[0] region.[1] - pst.Query (region.[2] - 1) region.[0] region.[1]
+                answer <- answer + ((region.[3] + 1, region.[0] + 1, region.[1] + 1) |||> pst.Query) - ((region.[2], region.[0] + 1, region.[1] + 1) |||> pst.Query)
 
             result.AppendFormat("{0}\n", answer) |> ignore
             times - 1 |> solve
