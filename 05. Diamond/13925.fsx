@@ -19,7 +19,7 @@ type LazySegmentTree<'T when 'T: equality> =
     val private leafCount: int
 
     new (count: int, _op, _init, _lazyInit, _updateOp, _propOp) =
-        let lc = LazySegmentTree<'T>.LeastSquare count + 1 in
+        let lc = LazySegmentTree<'T>.LeastSquare count in
         {
             op = _op
             updateOp = _updateOp
@@ -92,7 +92,7 @@ type LazySegmentTree<'T when 'T: equality> =
                 this.lazyNodes.[LazySegmentTree<'T>.LeftChild index] <- ((cur.mul, cur.add), (left.mul, left.add)) ||> this.propOp |> function | (a, b) -> { mul = a; add = b }
                 this.lazyNodes.[LazySegmentTree<'T>.RightChild index] <- ((cur.mul, cur.add), (right.mul, right.add)) ||> this.propOp |> function | (a, b) -> { mul = a; add = b }
 
-            this.lazyNodes.[index] <- LazyNode<'T>.CreateNew this.lazyInit
+            this.lazyNodes.[index] <- { mul = fst this.lazyInit; add = snd this.lazyInit }
 
 and LazyNode<'T when 'T: equality> = {
     mutable mul: 'T
