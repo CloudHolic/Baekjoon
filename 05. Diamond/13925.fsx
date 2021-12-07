@@ -103,9 +103,8 @@ and LazyNode<'T when 'T: equality> = {
 
 [<EntryPoint>]
 let main _ = 
-    let parseInts (str: string) = str.Trim().Split() |> Array.map int
-    let parseInt64s (str: string) = str.Trim().Split() |> Array.map int64
-    let update k n (m, a) = n * m + a * int64 k
+    let parseInts f (str: string) = str.Trim().Split() |> Array.map f
+    let update k n (m, a) = (Mul n m, int64 k |> Mul a) ||> Add
     let prop (m1, a1) (m2, a2) = (Mul m1 m2, Add (Mul m1 a2) a1)
 
     use stream = new StreamReader(Console.OpenStandardInput())
@@ -113,12 +112,12 @@ let main _ =
 
     let n = stream.ReadLine().Trim() |> int
     let segtree = LazySegmentTree<int64>(n, Add, 0L, (1L, 0L), update, prop)
-    stream.ReadLine() |> parseInt64s |> segtree.Init
+    stream.ReadLine() |> parseInts int64 |> segtree.Init
 
     let m = stream.ReadLine().Trim() |> int
     let rec solve times =
         if times > 0 then
-            let query = stream.ReadLine() |> parseInts
+            let query = stream.ReadLine() |> parseInts int
             match int query.[0] with
             | 1 -> (1L, int64 query.[3]) ||> segtree.Update query.[1] query.[2]
             | 2 -> (int64 query.[3], 0L) ||> segtree.Update query.[1] query.[2]
