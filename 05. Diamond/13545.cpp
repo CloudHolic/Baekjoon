@@ -27,7 +27,7 @@ vector<query> queries;
 
 void add(const int k)
 {
-	if(exi[nums[k]].size() >= 2)
+	if (exi[nums[k]].size() >= 2)
 	{
 		const int diff = exi[nums[k]].back() - exi[nums[k]].front();
 		counts[diff]--;
@@ -76,23 +76,24 @@ int main()
 
 	int n;
 	cin >> n;
+	nums.resize(n + 2);
+	counts.resize(n + 2);
+	exi.resize(n + 2);
 
-	n *= 2;
-	const int k = 2 * n + 1;
-
-	nums.resize(n + 1);
-	counts.resize(n + 1);
-	exi.resize(k + 1);
-
-	int sum = 0;
-	for (int i = 1; i <= n / 2; i++)
+	int sum = 0, minimum = 0;
+	for (int i = 1; i <= n; i++)
 	{
 		int temp;
 		cin >> temp;
 
 		sum += temp;
-		nums[i] = sum + n + 1;
+		minimum = min(minimum, sum);
+
+		nums[i] = sum;
 	}
+
+	for (int i = 0; i <= n; i++)
+		nums[i] -= minimum;
 
 	sqrt_n = static_cast<int>(sqrt(n)) + 1;
 	sqds.resize(sqrt_n);
@@ -103,18 +104,17 @@ int main()
 	results.resize(m);
 	for (int i = 0; i < m; i++)
 	{
-		cin >> queries[i].left >> queries[i].right;
-
 		queries[i].index = i;
-		queries[i].left--;
+		cin >> queries[i].left >> queries[i].right;
 		queries[i].sqrt = sqrt_n;
+		queries[i].left--;
 	}
 	sort(queries.begin(), queries.end());
 
-	counts[0] = sqds[0] = k + 3;
-	add(1);
+	counts[0] = sqds[0] = 1;
+	add(0);
 
-	for (int i = 0, l = 1, r = 1; i < m; i++)
+	for (int i = 0, l = 0, r = 0; i < m; i++)
 	{
 		const int st = queries[i].left;
 		const int en = queries[i].right;
