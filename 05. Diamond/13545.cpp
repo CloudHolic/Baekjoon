@@ -77,6 +77,7 @@ int main()
 	int n;
 	cin >> n;
 
+	n *= 2;
 	const int k = 2 * n + 1;
 
 	nums.resize(n + 1);
@@ -84,7 +85,7 @@ int main()
 	exi.resize(k + 1);
 
 	int sum = 0;
-	for (int i = 1; i <= n; i++)
+	for (int i = 1; i <= n / 2; i++)
 	{
 		int temp;
 		cin >> temp;
