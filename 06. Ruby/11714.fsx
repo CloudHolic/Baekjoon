@@ -47,83 +47,91 @@ module FastFourierTransform =
         loop 2 invert
         if invert then result |> Array.map (fun i -> i / Complex(float n, 0.)) else result
 
-    let multiply arr1 arr2 =
-        let LeastSquare k =
-            if k = 0 then 0
-            else
-                let rec loop i t =
-                    if i >= 64 then t
-                    else loop (i * 2) (t ||| (t >>> i))
-                loop 1 (k - 1) + 1
+[<CustomComparison; CustomEquality>]
+type Fraction = { 
+    Numerator: int64
+    Denominator: int64 } with
 
-        let size = Array.length arr1 + Array.length arr2 - 1 |> LeastSquare
-
-        let coeff1 = Array.init size (fun i -> if i < Array.length arr1 then Complex(float arr1.[i], 0.) else Complex(0., 0.))
-        let coeff2 = Array.init size (fun i -> if i < Array.length arr2 then Complex(float arr2.[i], 0.) else Complex(0., 0.))
-
-        (fft coeff1 false, fft coeff2 false)
-        ||> Array.map2 (fun x y -> x * y)
-        |> function
-            | res -> fft res true |> Array.map (fun x -> Math.Floor (x.Real + 0.5) |> int)
-
-type Fraction (numerator: int, denominator: int) =
-    member internal _.numerator = numerator
-    member internal _.denominator = denominator
-
-    member this.isInt =
-        let gcd = (max this.denominator this.numerator, min this.denominator this.numerator) ||> Fraction.gcd
-        this.numerator = gcd
+    member this.isInt() =
+        let gcd = (max this.Denominator this.Numerator, min this.Denominator this.Numerator) ||> Fraction.gcd
+        abs gcd = abs this.Denominator
         
-    member this.toInt = this.numerator / this.denominator
+    member this.toInt() = this.Numerator / this.Denominator
 
-    member this.toDecimal = decimal this.numerator / decimal this.denominator
+    member this.toDecimal() = decimal this.Numerator / decimal this.Denominator
 
     static member private gcd n d =
-        if d = 0 then n
+        if d = 0L then n
         else Fraction.gcd d (n % d)
 
+    static member CreateNew n d =
+        let gcd = Fraction.gcd n d
+        { Numerator = n / gcd; Denominator = d / gcd }
+
     static member (+) (frac1: Fraction, frac2: Fraction) =
-        let newN = frac1.numerator * frac2.denominator + frac1.denominator + frac2.numerator
-        let newD = frac1.denominator * frac2.denominator
+        let newN = frac1.Numerator * frac2.Denominator + frac1.Denominator * frac2.Numerator
+        let newD = frac1.Denominator * frac2.Denominator
         let gcd = (max newN newD, min newN newD) ||> Fraction.gcd
-        Fraction(newN / gcd, newD / gcd)
+        (newN / gcd, newD / gcd) ||> Fraction.CreateNew
     
     static member (-) (frac1: Fraction, frac2: Fraction) =
-        let newN = frac1.numerator * frac2.denominator - frac1.denominator + frac2.numerator
-        let newD = frac1.denominator * frac2.denominator
+        let newN = frac1.Numerator * frac2.Denominator - frac1.Denominator * frac2.Numerator
+        let newD = frac1.Denominator * frac2.Denominator
         let gcd = (max newN newD, min newN newD) ||> Fraction.gcd
-        Fraction(newN / gcd, newD / gcd)
+        (newN / gcd, newD / gcd) ||> Fraction.CreateNew
 
     static member (*) (frac1: Fraction, frac2: Fraction) =
-        let newN = frac1.numerator * frac2.numerator
-        let newD = frac1.denominator * frac2.denominator
+        let newN = frac1.Numerator * frac2.Numerator
+        let newD = frac1.Denominator * frac2.Denominator
         let gcd = (max newN newD, min newN newD) ||> Fraction.gcd
-        Fraction(newN / gcd, newD / gcd)
+        (newN / gcd, newD / gcd) ||> Fraction.CreateNew
 
     static member (/) (frac1: Fraction, frac2: Fraction) =
-        let newN = frac1.numerator * frac2.denominator
-        let newD = frac1.denominator * frac2.numerator
+        let newN = frac1.Numerator * frac2.Denominator
+        let newD = frac1.Denominator * frac2.Numerator
         let gcd = (max newN newD, min newN newD) ||> Fraction.gcd
-        Fraction(newN / gcd, newD / gcd)
+        (newN / gcd, newD / gcd) ||> Fraction.CreateNew
+
+    override this.GetHashCode() = hash <| this.toInt()
+
+    interface IComparable<Fraction> with
+        member this.CompareTo other =
+            (this.Numerator * other.Denominator, this.Denominator * other.Numerator) ||> compare
+
+    interface IComparable with
+        member this.CompareTo obj =
+            match obj with
+            | null -> 1
+            | :? Fraction as other -> (this :> IComparable<_>).CompareTo other
+            | _ -> invalidArg "obj" "not a Point"
+
+    interface IEquatable<Fraction> with
+        member this.Equals other =
+            this.Numerator * other.Denominator = this.Denominator * other.Numerator
+
+    override this.Equals obj =
+        match obj with
+        | :? Fraction as other -> (this :> IEquatable<_>).Equals other
+        |_ -> false
 
 type Line = {
     Slope: Fraction
     Bias: Fraction } with
     
-    static member InfSlope = Fraction(Int32.MaxValue, 1)
+    static member InfSlope = (Int64.MaxValue, 1L) ||> Fraction.CreateNew
 
     static member CreateNew point1 point2 =
         let diffX = point2.X - point1.X
-        let slope = if diffX <> 0 then Fraction(point2.Y - point1.Y, diffX) else Line.InfSlope
-        let bias = if diffX <> 0 then Fraction(point1.Y, 1) - Fraction(point1.X, 1) * slope else Fraction(point1.X, 1)
+        let slope = if diffX <> 0L then (point2.Y - point1.Y, diffX) ||> Fraction.CreateNew else Line.InfSlope
+        let bias = if diffX <> 0L then (Fraction.CreateNew point1.Y 1L) - (Fraction.CreateNew point1.X 1L) * slope else (point1.X, 1L) ||> Fraction.CreateNew
         { Slope = slope; Bias = bias }
     
     member this.eval x = x * this.Slope + this.Bias
 
 and [<CustomComparison; CustomEquality>]
     Point = {
-    X: int
-    Y: int } with
+    X: int64
+    Y: int64 } with
 
     override this.GetHashCode() = hash this.X
 
@@ -146,13 +154,14 @@ and [<CustomComparison; CustomEquality>]
     override this.Equals obj =
         match obj with
         | :? Point as other -> (this :> IEquatable<_>).Equals other
-        |_ -> false    
+        |_ -> false
 
 
 [<EntryPoint>]
 let main _ = 
-    let parseInts (str: string) = str.Trim().Split() |> Array.map int
-    let isInt (x: decimal) = x % 1m = 0m
+    let parseInts f (str: string) = str.Trim().Split() |> Array.map f
+    let spinTransform x = { X = x.X - x.Y; Y = x.X + x.Y }
+    let symmetricTransform x = { X = x.Y; Y = x.X }
 
     let binSearch arr target =        
         let rec inner arr target pos =
@@ -197,19 +206,19 @@ let main _ =
         inner arr target 0 (Array.length arr)
 
     use stream = new StreamReader(Console.OpenStandardInput())
-    let l, m, n = stream.ReadLine() |> parseInts |> function | nums -> nums.[0], nums.[1], nums.[2]
+    let l, m, n = stream.ReadLine() |> parseInts int |> function | nums -> nums.[0], nums.[1], nums.[2]
 
     let mutable Apoints: Point[] = Array.zeroCreate l
     let mutable Bpoints: Point[] = Array.zeroCreate m
     let mutable Cpoints: Point[] = Array.zeroCreate n
 
-    let mutable Aline = { Slope = Fraction(0, 1); Bias = Fraction(0, 1) }
-    let mutable Bline = { Slope = Fraction(0, 1); Bias = Fraction(0, 1) }
+    let mutable Aline = { Slope = (0L, 1L) ||> Fraction.CreateNew; Bias = (0L, 1L) ||> Fraction.CreateNew }
+    let mutable Bline = { Slope = (0L, 1L) ||> Fraction.CreateNew; Bias = (0L, 1L) ||> Fraction.CreateNew }
 
     let mutable onePointA = true
     for i = 0 to l - 1 do
         stream.ReadLine() 
-        |> parseInts 
+        |> parseInts int64
         |> function
             | nums -> 
                 if i > 0 && onePointA && (nums.[0] <> Apoints.[i - 1].X || nums.[1] <> Apoints.[i - 1].Y) then
@@ -220,7 +229,7 @@ let main _ =
     let mutable onePointB = true
     for i = 0 to m - 1 do        
         stream.ReadLine() 
-        |> parseInts 
+        |> parseInts int64
         |> function 
             | nums -> 
                 if i > 0 && onePointB && (nums.[0] <> Bpoints.[i - 1].X || nums.[1] <> Bpoints.[i - 1].Y) then 
@@ -229,7 +238,7 @@ let main _ =
                 Bpoints.[i] <- { X = nums.[0]; Y = nums.[1] }
 
     for i = 0 to n - 1 do
-        stream.ReadLine() |> parseInts |> function | nums -> Cpoints.[i] <- { X = nums.[0]; Y = nums.[1] }
+        stream.ReadLine() |> parseInts int64 |> function | nums -> Cpoints.[i] <- { X = nums.[0]; Y = nums.[1] }
 
     let mutable answer = 0
 
@@ -240,46 +249,72 @@ let main _ =
                 let sumX = Apoints.[i].X + Bpoints.[j].X
                 let sumY = Apoints.[i].Y + Bpoints.[j].Y
 
-                if sumX &&& 1 = 0 && sumY &&& 1 = 0 then
-                    let idx = binSearch Cpoints { X = sumX / 2; Y = sumY / 2 }
+                if sumX &&& 1L = 0L && sumY &&& 1L = 0L then
+                    let idx = binSearch Cpoints { X = sumX / 2L; Y = sumY / 2L }
                     if idx > -1 then answer <- answer + 1
     else
         // Before Case 2 & 3, remove Inf slope.
         if Aline.Slope = Line.InfSlope || Bline.Slope = Line.InfSlope then
-            if Aline.Slope.toDecimal = 0m || Bline.Slope.toDecimal = 0m then
+            if Aline.Slope.toDecimal() = 0m || Bline.Slope.toDecimal() = 0m then
                 // 45 degree transform
-                Apoints <- Apoints |> Array.map (fun x -> { X = x.X - x.Y; Y = x.X + x.Y }) |> Array.sort
-                Bpoints <- Bpoints |> Array.map (fun x -> { X = x.X - x.Y; Y = x.X + x.Y }) |> Array.sort
-                Cpoints <- Cpoints |> Array.map (fun x -> { X = x.X - x.Y; Y = x.X + x.Y }) |> Array.sort
+                Apoints <- Apoints |> Array.map spinTransform
+                Bpoints <- Bpoints |> Array.map spinTransform
+                Cpoints <- Cpoints |> Array.map spinTransform
             else
                 // Symmetric transform
-                Apoints <- Apoints |> Array.map (fun x -> { X = x.Y; Y = x.X }) |> Array.sort
-                Bpoints <- Bpoints |> Array.map (fun x -> { X = x.Y; Y = x.X }) |> Array.sort
-                Cpoints <- Cpoints |> Array.map (fun x -> { X = x.Y; Y = x.X }) |> Array.sort
+                Apoints <- Apoints |> Array.map symmetricTransform
+                Bpoints <- Bpoints |> Array.map symmetricTransform
+                Cpoints <- Cpoints |> Array.map symmetricTransform
+
+        Apoints <- Apoints |> Array.sort
+        Bpoints <- Bpoints |> Array.sort
+        Cpoints <- Cpoints |> Array.sort
 
         let Aline = Line.CreateNew Apoints.[0] Apoints.[l - 1]
         let Bline = Line.CreateNew Bpoints.[0] Bpoints.[m - 1]
+        let Cline = Line.CreateNew Cpoints.[0] Cpoints.[n - 1]
         
         // Case 2: A.Slope <> B.Slope
         if Aline.Slope <> Bline.Slope then
             let diffSlope = Bline.Slope - Aline.Slope
             for i = 0 to n - 1 do
-                let temp1 = Fraction(2 * Cpoints.[i].X, 1)
-                let temp2 = Fraction(2 * Cpoints.[i].Y, 1) - Aline.Bias - Bline.Bias
+                let temp1 = (2L * Cpoints.[i].X, 1L) ||> Fraction.CreateNew
+                let temp2 = (Fraction.CreateNew <|| (2L * Cpoints.[i].Y, 1L)) - Aline.Bias - Bline.Bias
 
                 let newX1 = (temp1 * Bline.Slope - temp2) / diffSlope
                 let newX2 = (temp2 - temp1 * Aline.Slope) / diffSlope
                 let newY1 = Aline.eval newX1
                 let newY2 = Bline.eval newX2
 
-                if newX1.isInt && newX2.isInt && newY1.isInt && newY2.isInt then
-                    let numA = upperBound Apoints { X = newX1.toInt; Y = newY1.toInt } - lowerBound Apoints { X = newX1.toInt; Y = newY1.toInt }
-                    let numB = upperBound Bpoints { X = newX2.toInt; Y = newY2.toInt } - lowerBound Bpoints { X = newX2.toInt; Y = newY2.toInt }
+                if newX1.isInt() && newX2.isInt() && newY1.isInt() && newY2.isInt() then
+                    let numA = upperBound Apoints { X = newX1.toInt(); Y = newY1.toInt() } - lowerBound Apoints { X = newX1.toInt(); Y = newY1.toInt() }
+                    let numB = upperBound Bpoints { X = newX2.toInt(); Y = newY2.toInt() } - lowerBound Bpoints { X = newX2.toInt(); Y = newY2.toInt() }
                     answer <- answer + numA * numB
 
         // Case 3: A.Slope = B.Slope
         else
-            ()
+            let x: Complex array = Array.zeroCreate 1048576
+            let y: Complex array = Array.zeroCreate 1048576
+
+            for i = 0 to l - 1 do
+                let idx = int Apoints.[i].X + 200000
+                x.[idx] <- x.[idx] + Complex(1., 0.)
+
+            for i = 0 to m - 1 do
+                let idx = int Bpoints.[i].X + 200000
+                y.[idx] <- y.[idx] + Complex(1., 0.)
+
+            let res =
+                (FastFourierTransform.fft x false, FastFourierTransform.fft y false)
+                ||> Array.map2 (fun x y -> x * y)
+                |> function | list -> FastFourierTransform.fft list true |> Array.map (fun x -> Math.Floor (x.Real + 0.5) |> int)
+                            
+            let desiredBias = (Aline.Bias + Bline.Bias) / (Fraction.CreateNew 2L 1L)
+            for i = 0 to n - 1 do
+                let eval = (Fraction.CreateNew Cpoints.[i].X 1L) * Aline.Slope + desiredBias
+                if eval.isInt() && Cpoints.[i].Y = eval.toInt() then
+                    let idx = int Cpoints.[i].X * 2 + 400000
+                    answer <- answer + res.[idx]
 
     printfn "%d" answer
     0
