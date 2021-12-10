@@ -49,8 +49,8 @@ module FastFourierTransform =
 
 [<CustomComparison; CustomEquality>]
 type Fraction = { 
-    Numerator: int64
-    Denominator: int64 } with
+    Numerator: bigint
+    Denominator: bigint } with
 
     member this.isInt() =
         let gcd = (max this.Denominator this.Numerator, min this.Denominator this.Numerator) ||> Fraction.gcd
@@ -58,10 +58,8 @@ type Fraction = {
         
     member this.toInt() = this.Numerator / this.Denominator
 
-    member this.toDecimal() = decimal this.Numerator / decimal this.Denominator
-
     static member private gcd n d =
-        if d = 0L then n
+        if d = 0I then n
         else Fraction.gcd d (n % d)
 
     static member CreateNew n d =
@@ -106,7 +104,7 @@ type Fraction = {
             | _ -> invalidArg "obj" "not a Point"
 
     interface IEquatable<Fraction> with
-        member this.Equals other =
+        member this.Equals other =            
             this.Numerator * other.Denominator = this.Denominator * other.Numerator
 
     override this.Equals obj =
@@ -118,20 +116,20 @@ type Line = {
     Slope: Fraction
     Bias: Fraction } with
     
-    static member InfSlope = (Int64.MaxValue, 1L) ||> Fraction.CreateNew
+    static member InfSlope = (bigint Int64.MaxValue, 1I) ||> Fraction.CreateNew
 
     static member CreateNew point1 point2 =
         let diffX = point2.X - point1.X
-        let slope = if diffX <> 0L then (point2.Y - point1.Y, diffX) ||> Fraction.CreateNew else Line.InfSlope
-        let bias = if diffX <> 0L then (Fraction.CreateNew point1.Y 1L) - (Fraction.CreateNew point1.X 1L) * slope else (point1.X, 1L) ||> Fraction.CreateNew
+        let slope = if diffX <> 0I then (point2.Y - point1.Y, diffX) ||> Fraction.CreateNew else Line.InfSlope
+        let bias = if diffX <> 0I then (Fraction.CreateNew point1.Y 1I) - (Fraction.CreateNew point1.X 1I) * slope else (point1.X, 1I) ||> Fraction.CreateNew
         { Slope = slope; Bias = bias }
     
     member this.eval x = x * this.Slope + this.Bias
 
 and [<CustomComparison; CustomEquality>]
     Point = {
-    X: int64
-    Y: int64 } with
+    X: bigint
+    Y: bigint } with
 
     override this.GetHashCode() = hash this.X
 
@@ -163,45 +161,27 @@ let main _ =
     let spinTransform x = { X = x.X - x.Y; Y = x.X + x.Y }
     let symmetricTransform x = { X = x.Y; Y = x.X }
 
-    let binSearch arr target =        
-        let rec inner arr target pos =
-            match Array.length arr with
-            | 0 -> -1
-            | i -> 
-                let middle = i >>> 1
-                match sign <| compare target arr.[middle] with
-                | 0  -> middle + pos
-                | -1 -> pos |> inner arr.[.. middle - 1] target
-                | _  -> pos + middle + 1 |> inner arr.[middle + 1 ..] target
-
-        inner arr target 0
-
     let lowerBound arr target =
         let rec inner (arr: 'T array) target beg en = 
-            match sign <| compare en beg with
-            | -1 -> -1
-            | _ -> 
+            match sign <| compare beg en with            
+            | -1 -> 
                 let mid = (beg + en) >>> 1
-                match sign <| compare target arr.[mid] with
-                | 1  -> inner arr target (mid + 1) en
-                | _ -> 
-                    if beg < mid then inner arr target beg mid
-                    else mid
+                match sign <| compare arr.[mid] target with
+                | -1  -> inner arr target (mid + 1) en
+                | _ -> inner arr target beg mid
+            | _ -> beg
 
         inner arr target 0 (Array.length arr)
 
     let upperBound arr target =
         let rec inner (arr: 'T array) target beg en =
-            match sign <| compare en beg with
-            | -1 -> -1
-            | 0 -> beg
-            | _ ->
+            match sign <| compare beg en with
+            | -1 ->
                 let mid = (beg + en) >>> 1
-                match sign <| compare target arr.[mid] with
-                | -1 -> inner arr target beg mid
-                | _ ->
-                    if beg < mid then inner arr target (mid + 1) en
-                    else mid + 1
+                match sign <| compare arr.[mid] target with
+                | 1 -> inner arr target beg mid
+                | _ -> inner arr target (mid + 1) en
+            | _ -> beg
 
         inner arr target 0 (Array.length arr)
 
@@ -212,13 +192,13 @@ let main _ =
     let mutable Bpoints: Point[] = Array.zeroCreate m
     let mutable Cpoints: Point[] = Array.zeroCreate n
 
-    let mutable Aline = { Slope = (0L, 1L) ||> Fraction.CreateNew; Bias = (0L, 1L) ||> Fraction.CreateNew }
-    let mutable Bline = { Slope = (0L, 1L) ||> Fraction.CreateNew; Bias = (0L, 1L) ||> Fraction.CreateNew }
+    let mutable Aline = { Slope = (0I, 1I) ||> Fraction.CreateNew; Bias = (0I, 1I) ||> Fraction.CreateNew }
+    let mutable Bline = { Slope = (0I, 1I) ||> Fraction.CreateNew; Bias = (0I, 1I) ||> Fraction.CreateNew }
 
     let mutable onePointA = true
     for i = 0 to l - 1 do
         stream.ReadLine() 
-        |> parseInts int64
+        |> parseInts bigint.Parse
         |> function
             | nums -> 
                 if i > 0 && onePointA && (nums.[0] <> Apoints.[i - 1].X || nums.[1] <> Apoints.[i - 1].Y) then
@@ -229,7 +209,7 @@ let main _ =
     let mutable onePointB = true
     for i = 0 to m - 1 do        
         stream.ReadLine() 
-        |> parseInts int64
+        |> parseInts bigint.Parse
         |> function 
             | nums -> 
                 if i > 0 && onePointB && (nums.[0] <> Bpoints.[i - 1].X || nums.[1] <> Bpoints.[i - 1].Y) then 
@@ -238,24 +218,37 @@ let main _ =
                 Bpoints.[i] <- { X = nums.[0]; Y = nums.[1] }
 
     for i = 0 to n - 1 do
-        stream.ReadLine() |> parseInts int64 |> function | nums -> Cpoints.[i] <- { X = nums.[0]; Y = nums.[1] }
+        stream.ReadLine() |> parseInts bigint.Parse |> function | nums -> Cpoints.[i] <- { X = nums.[0]; Y = nums.[1] }
 
-    let mutable answer = 0
+    let mutable answer = 0L
 
     // Case 1: l = 1 || m = 1
     if onePointA || onePointB then
-        for i = 0 to l - 1 do
-            for j = 0 to m - 1 do
-                let sumX = Apoints.[i].X + Bpoints.[j].X
-                let sumY = Apoints.[i].Y + Bpoints.[j].Y
+        Apoints <- Apoints |> Array.sort
+        Bpoints <- Bpoints |> Array.sort
+        Cpoints <- Cpoints |> Array.sort
 
-                if sumX &&& 1L = 0L && sumY &&& 1L = 0L then
-                    let idx = binSearch Cpoints { X = sumX / 2L; Y = sumY / 2L }
-                    if idx > -1 then answer <- answer + 1
+        if onePointA then
+            for i = 0 to m - 1 do
+                let sumX = Apoints.[0].X + Bpoints.[i].X
+                let sumY = Apoints.[0].Y + Bpoints.[i].Y
+
+                if sumX &&& 1I = 0I && sumY &&& 1I = 0I then                    
+                    let idx = upperBound Cpoints { X = sumX / 2I; Y = sumY / 2I } - lowerBound Cpoints { X = sumX / 2I; Y = sumY / 2I }
+                    answer <- answer + int64 idx * int64 l
+        else if onePointB then
+            for i = 0 to l - 1 do
+                let sumX = Apoints.[i].X + Bpoints.[0].X
+                let sumY = Apoints.[i].Y + Bpoints.[0].Y
+
+                if sumX &&& 1I = 0I && sumY &&& 1I = 0I then                    
+                    let idx = upperBound Cpoints { X = sumX / 2I; Y = sumY / 2I } - lowerBound Cpoints { X = sumX / 2I; Y = sumY / 2I }
+                    answer <- answer + int64 idx * int64 m
+
     else
         // Before Case 2 & 3, remove Inf slope.
-        if Aline.Slope = Line.InfSlope || Bline.Slope = Line.InfSlope then
-            if Aline.Slope.toDecimal() = 0m || Bline.Slope.toDecimal() = 0m then
+        if Aline.Slope.Numerator = bigint Int64.MaxValue || Bline.Slope.Numerator = bigint Int64.MaxValue then
+            if Aline.Slope.Numerator = 0I || Bline.Slope.Numerator = 0I then
                 // 45 degree transform
                 Apoints <- Apoints |> Array.map spinTransform
                 Bpoints <- Bpoints |> Array.map spinTransform
@@ -272,14 +265,13 @@ let main _ =
 
         let Aline = Line.CreateNew Apoints.[0] Apoints.[l - 1]
         let Bline = Line.CreateNew Bpoints.[0] Bpoints.[m - 1]
-        let Cline = Line.CreateNew Cpoints.[0] Cpoints.[n - 1]
         
         // Case 2: A.Slope <> B.Slope
         if Aline.Slope <> Bline.Slope then
             let diffSlope = Bline.Slope - Aline.Slope
             for i = 0 to n - 1 do
-                let temp1 = (2L * Cpoints.[i].X, 1L) ||> Fraction.CreateNew
-                let temp2 = (Fraction.CreateNew <|| (2L * Cpoints.[i].Y, 1L)) - Aline.Bias - Bline.Bias
+                let temp1 = (2I * Cpoints.[i].X, 1I) ||> Fraction.CreateNew
+                let temp2 = (Fraction.CreateNew <|| (2I * Cpoints.[i].Y, 1I)) - Aline.Bias - Bline.Bias
 
                 let newX1 = (temp1 * Bline.Slope - temp2) / diffSlope
                 let newX2 = (temp2 - temp1 * Aline.Slope) / diffSlope
@@ -289,7 +281,7 @@ let main _ =
                 if newX1.isInt() && newX2.isInt() && newY1.isInt() && newY2.isInt() then
                     let numA = upperBound Apoints { X = newX1.toInt(); Y = newY1.toInt() } - lowerBound Apoints { X = newX1.toInt(); Y = newY1.toInt() }
                     let numB = upperBound Bpoints { X = newX2.toInt(); Y = newY2.toInt() } - lowerBound Bpoints { X = newX2.toInt(); Y = newY2.toInt() }
-                    answer <- answer + numA * numB
+                    answer <- answer + int64 numA * int64 numB
 
         // Case 3: A.Slope = B.Slope
         else
@@ -309,12 +301,12 @@ let main _ =
                 ||> Array.map2 (fun x y -> x * y)
                 |> function | list -> FastFourierTransform.fft list true |> Array.map (fun x -> Math.Floor (x.Real + 0.5) |> int)
                             
-            let desiredBias = (Aline.Bias + Bline.Bias) / (Fraction.CreateNew 2L 1L)
+            let desiredBias = (Aline.Bias + Bline.Bias) / (Fraction.CreateNew 2I 1I)
             for i = 0 to n - 1 do
-                let eval = (Fraction.CreateNew Cpoints.[i].X 1L) * Aline.Slope + desiredBias
+                let eval = (Fraction.CreateNew Cpoints.[i].X 1I) * Aline.Slope + desiredBias
                 if eval.isInt() && Cpoints.[i].Y = eval.toInt() then
                     let idx = int Cpoints.[i].X * 2 + 400000
-                    answer <- answer + res.[idx]
+                    answer <- answer + int64 res.[idx]
 
     printfn "%d" answer
     0
