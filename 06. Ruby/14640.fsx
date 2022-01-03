@@ -175,9 +175,7 @@ let main _ =
                 deadlines.[p.Deadline] <- PriorityQueue.push deadlines.[p.Deadline] (snd photos.[p.cur] * -1)
                 p.cur <- p.cur + 1
 
-            if PriorityQueue.length deadlines.[p.Deadline] > 0 && p.t + t + PriorityQueue.peek deadlines.[p.Deadline] > 0 then
-                ()
-            else
+            if PriorityQueue.length deadlines.[p.Deadline] = 0 || p.t + t + PriorityQueue.peek deadlines.[p.Deadline] <= 0 then            
                 if p.cur < n && (PriorityQueue.length deadlines.[p.Deadline] = 0 || fst photos.[p.cur] < p.t + t) then
                     pq <- PriorityQueue.push pq { t = fst photos.[p.cur]; cur = p.cur; Photo = p.Photo; Deadline = p.Deadline; SumStarts = p.SumStarts; AfterPhoto = false }
                 if PriorityQueue.length deadlines.[p.Deadline] > 0 then
