@@ -17,40 +17,20 @@ let main _ =
     for i = 0 to n - 1 do
         consumers[i] <- stream.ReadLine() |> parseTwoInts int64
 
-    let temp = Stack<int64 * int64>()
-    for i = 0 to m - 1 do
-        let mutable flag = temp.Count > 0
-        while flag do
-            if temp.Count > 0 then
-                let top = temp.Peek()
-                if fst top > fst producers[i] && snd top > snd producers[i] then
-                    temp.Pop() |> ignore
-                else
-                    flag <- false
-            else
-                flag <- false
-        let top = if temp.Count = 0 then (int64 Int32.MaxValue, int64 Int32.MaxValue) else temp.Peek()
-        if fst top < fst producers[i] && snd top < snd producers[i] then ()
-        else producers[i] |> temp.Push
+    let temp = ResizeArray<int64 * int64>()
 
-    let producers = Array.init temp.Count (fun _ -> temp.Pop()) |> Array.sort
+    producers
+    |> Array.sort
+    |> Array.iter (fun x -> if temp.Count = 0 || snd temp[temp.Count - 1] > snd x then temp.Add x)
+    let producers = temp.ToArray()
 
-    for i = 0 to n - 1 do
-        let mutable flag = temp.Count > 0
-        while flag do
-            if temp.Count > 0 then
-                let top = temp.Peek()
-                if fst top < fst consumers.[i] && snd top < snd consumers[i] then
-                    temp.Pop() |> ignore
-                else
-                    flag <- false
-            else
-                flag <- false
-        let top = if temp.Count = 0 then (0L, 0L) else temp.Peek()
-        if fst top > fst consumers[i] && snd top > snd consumers[i] then ()
-        else consumers[i] |> temp.Push
+    temp.Clear()
+    consumers
+    |> Array.sort
+    |> Array.rev
+    |> Array.iter (fun x -> if temp.Count = 0 || snd temp[temp.Count - 1] < snd x then temp.Add x)
+    let consumers = temp.ToArray() |> Array.rev
 
-    let consumers = Array.init temp.Count (fun _ -> temp.Pop()) |> Array.sort
 
     let relation con pro =
         let ds = snd con - snd pro
@@ -60,7 +40,7 @@ let main _ =
     let rec solve s e l r =
         if s <= e then
             let mid = s + e >>> 1
-            let mutable k, i = l, l
+            let mutable k, i = l, l            
                         
             while i <= r do
                 let temp = relation consumers[i] producers[mid]
@@ -69,11 +49,10 @@ let main _ =
                     k <- i
                 i <- i + 1
 
-            result <- relation consumers[k] producers[mid] |> max result
             solve s (mid - 1) l k
             solve (mid + 1) e k r
-        
+            result <- relation consumers[k] producers[mid] |> max result        
 
-    solve 0 (consumers.Length - 1) 0 (producers.Length - 1)
+    solve 0 (producers.Length - 1) 0 (consumers.Length - 1)
     printfn "%d" result
     0
