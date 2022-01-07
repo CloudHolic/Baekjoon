@@ -33,7 +33,7 @@ let main _ =
         if fst top < fst producers[i] && snd top < snd producers[i] then ()
         else producers[i] |> temp.Push
 
-    let producers = Array.init temp.Count (fun _ -> temp.Pop())
+    let producers = Array.init temp.Count (fun _ -> temp.Pop()) |> Array.sort
 
     for i = 0 to n - 1 do
         let mutable flag = temp.Count > 0
@@ -50,7 +50,7 @@ let main _ =
         if fst top > fst consumers[i] && snd top > snd consumers[i] then ()
         else consumers[i] |> temp.Push
 
-    let consumers = Array.init temp.Count (fun _ -> temp.Pop())
+    let consumers = Array.init temp.Count (fun _ -> temp.Pop()) |> Array.sort
 
     let relation con pro =
         let ds = snd con - snd pro
