@@ -1,5 +1,4 @@
 open System
-open System.Collections.Generic
 open System.IO
 
 [<EntryPoint>]
@@ -31,27 +30,26 @@ let main _ =
     |> Array.iter (fun x -> if temp.Count = 0 || snd temp[temp.Count - 1] < snd x then temp.Add x)
     let consumers = temp.ToArray() |> Array.rev
 
-
-    let relation con pro =
-        let ds = snd con - snd pro
-        let df = fst con - fst pro
-        if ds > 0L && df > 0L then ds * df else 0
+    let relation i j =
+        let df = fst consumers[i] - fst producers[j]
+        let ds = snd consumers[i] - snd producers[j]
+        if df < 0L && ds < 0L then 0L else ds * df
 
     let rec solve s e l r =
         if s <= e then
             let mid = s + e >>> 1
-            let mutable k, i = l, l            
-                        
+            let mutable k, i, cur = s, l, Int64.MinValue
+
             while i <= r do
-                let temp = relation consumers[i] producers[mid]
-                let temp2 = relation consumers[k] producers[mid]
-                if temp > 0 && temp > temp2 then
+                let temp = relation i mid
+                if temp > cur then
+                    cur <- temp
                     k <- i
                 i <- i + 1
-
+                
             solve s (mid - 1) l k
             solve (mid + 1) e k r
-            result <- relation consumers[k] producers[mid] |> max result        
+            result <- max result cur
 
     solve 0 (producers.Length - 1) 0 (consumers.Length - 1)
     printfn "%d" result
