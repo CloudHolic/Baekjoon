@@ -85,7 +85,7 @@ let main _ =
             else
                 trial low |> snd
 
-        [(-100.0, -a / 10.0); (-a / 10.0, (c - a) / 10.0); ((a - c) / 10.0, 100.0)]
+        [(-100.0, a / 10.0); (-a / 10.0, (c - a) / 10.0); ((a - c) / 10.0, 100.0)]
         |> List.map (fun x -> x ||> inner)
         |> List.min
 
@@ -94,10 +94,10 @@ let main _ =
         match n with
         | 1 ->
             let c = stream.ReadLine().Trim() |> float
-            result.AppendFormat("Case #{0}: {1:N2}\n", i, (a - c, b - c) ||> solve1) |> ignore
+            result.AppendFormat("Case #{0}: {1}\n", i, (a - c, b - c) ||> solve1) |> ignore
         | _ ->
             let c1, c2 = stream.ReadLine().Trim().Split() |> Array.map float |> function | c -> Array.min c, Array.max c
-            result.AppendFormat("Case #{0}: {1:N2}\n", i, (a - c1, b - c1, c2 - c1) |||> solve2) |> ignore
+            result.AppendFormat("Case #{0}: {1}\n", i, (a - c1, b - c1, c2 - c1) |||> solve2) |> ignore
 
     printfn "%A" result
     0
