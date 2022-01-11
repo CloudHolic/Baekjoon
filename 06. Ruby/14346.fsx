@@ -19,7 +19,7 @@ let main _ =
                 let temp2 = -2.0 * (y - x * py) / (square * square)
                 temp1 * temp2 / (1.0 + 1.0 / square)
                 
-            let mutable x, px = -10.0, 0.0001
+            let mutable x, px = -10.0, 0.01
             let mutable y, py = a, py
             let mutable result = 0.0
 
