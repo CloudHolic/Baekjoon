@@ -13,11 +13,11 @@ let main _ =
         let trial py =
             let get_length posx posy len = len * (1.0 + 1.0 / (posx * posx + posy * posy))
 
-            let eval_ppy x y py =
+            let eval_ppy x y py =            
+                let square = x * x + y * y
                 let temp1 = 1.0 + py * py
-                let temp2 = 2.0 * x * py - 2.0 * y
-                let temp3 = x * x + y * y
-                temp1 * temp2 / (temp3 * (temp3 + 1.0))
+                let temp2 = -2.0 * (y - x * py) / (square * square)
+                temp1 * temp2 / (1.0 + 1.0 / square)
                 
             let mutable x, px = -10.0, 0.0001
             let mutable y, py = a, py
@@ -43,7 +43,7 @@ let main _ =
             else
                 trial low |> snd
 
-        [(-100.0, -a / 10.0); (-a / 10.0, 100.0)]
+        [(-2.0, -a / 10.0); (-a / 10.0, 2.0)]
         |> List.map (fun x -> x ||> inner)
         |> List.min
 
@@ -54,12 +54,12 @@ let main _ =
                 len * (1.0 + 1.0 / (posx * posx + posy * posy) + 1.0 / (posx * posx + temp * temp))
 
             let eval_ppy x y py =
+                let square1 = x * x + y * y
+                let square2 = x * x + (y - c) * (y - c)
                 let temp1 = 1.0 + py * py
-                let temp2 = x * x + y * y
-                let temp3 = x * x + (y - c) * (y - c)
-                let temp4 = -2.0 * y / (temp2 * temp2)
-                let temp5 = -2.0 * (y - c) / (temp3 * temp3)
-                temp1 * (temp4 + temp5) / (1.0 + 1.0 / temp2 + 1.0 / temp3)
+                let temp2 = -2.0 * (y - x * py) / (square1 * square1)
+                let temp3 = -2.0 * (y - c - x * py) / (square2 * square2)
+                temp1 * (temp2 + temp3) / (1.0 + 1.0 / square1 + 1.0 / square2)
         
             let mutable x, px = -10.0, 0.0001
             let mutable y, py = a, py
@@ -85,7 +85,8 @@ let main _ =
             else
                 trial low |> snd
 
-        [(-100.0, a / 10.0); (-a / 10.0, (c - a) / 10.0); ((a - c) / 10.0, 100.0)]
+        let minSlope, maxSlope = [|(c - a) / 10.0; -a / 10.0|] |> function | s -> Array.min s, Array.max s
+        [(-2.0, minSlope); (minSlope, maxSlope); (maxSlope, 2.0)]
         |> List.map (fun x -> x ||> inner)
         |> List.min
 
@@ -94,10 +95,10 @@ let main _ =
         match n with
         | 1 ->
             let c = stream.ReadLine().Trim() |> float
-            result.AppendFormat("Case #{0}: {1}\n", i, (a - c, b - c) ||> solve1) |> ignore
+            result.AppendFormat("Case #{0}: {1:N2}\n", i, (a - c, b - c) ||> solve1) |> ignore
         | _ ->
             let c1, c2 = stream.ReadLine().Trim().Split() |> Array.map float |> function | c -> Array.min c, Array.max c
-            result.AppendFormat("Case #{0}: {1}\n", i, (a - c1, b - c1, c2 - c1) |||> solve2) |> ignore
+            result.AppendFormat("Case #{0}: {1:N2}\n", i, (a - c1, b - c1, c2 - c1) |||> solve2) |> ignore
 
     printfn "%A" result
     0

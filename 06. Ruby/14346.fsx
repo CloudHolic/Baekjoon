@@ -10,16 +10,17 @@ let main _ =
     let tests = stream.ReadLine() |> int
 
     let solve a b =
-        let trial y py =
+        let trial py =
             let get_length posx posy len = len * (1.0 + 1.0 / (posx * posx + posy * posy))
-            let eval_ppy x y py =
-                let temp1 = 2.0 * x * py - 2.0 * y
-                let temp2 = 1.0 + py * py
-                let temp3 = x * x + y * y
-                temp1 / (temp3 * (temp3 + 1.0)) * temp2
+
+            let eval_ppy x y py =            
+                let square = x * x + y * y
+                let temp1 = 1.0 + py * py
+                let temp2 = -2.0 * (y - x * py) / (square * square)
+                temp1 * temp2 / (1.0 + 1.0 / square)
                 
             let mutable x, px = -10.0, 0.0001
-            let mutable y, py = y, py
+            let mutable y, py = a, py
             let mutable result = 0.0
 
             while x < 10.0 do
@@ -35,14 +36,14 @@ let main _ =
         let rec inner low high =
             if low - high |> abs > 1e-5 then
                 let mid = (low + high) / 2.0
-                let endpos, _ = trial a mid
+                let endpos, _ = trial mid
                 match endpos with
                 | c when c < b -> inner mid high
                 | _ -> inner low mid
             else
-                trial a low |> snd
+                trial low |> snd
 
-        [(-100.0, -a / 10.0); (-a / 10.0, 100.0)]
+        [(-2.0, -a / 10.0); (-a / 10.0, 2.0)]
         |> List.map (fun x -> x ||> inner)
         |> List.min
 
