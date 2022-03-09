@@ -217,27 +217,27 @@ let main _ =
             |> Array.map int64
             |> function
                 | arr -> 
-                    if i = size - 1 then last <- arr.[1]
-                    arr.[0])
-    matrix.[size] <- last
+                    if i = size - 1 then last <- arr[1]
+                    arr[0])
+    matrix[size] <- last
 
     let solve =
         let rotate (arr: 'T array) i startIdx endIdx =
             let diff = i - startIdx
-            let tempArr = Array.copy arr.[startIdx .. i - 1]
-            arr.[startIdx .. endIdx - diff] <- arr.[i .. endIdx]
-            arr.[endIdx - diff + 1 .. endIdx] <- tempArr
+            let tempArr = Array.copy arr[startIdx .. i - 1]
+            arr[startIdx .. endIdx - diff] <- arr[i .. endIdx]
+            arr[endIdx - diff + 1 .. endIdx] <- tempArr
         
         // Prepare
         let minIdx = matrix |> Seq.indexed |> Seq.minBy (fun x -> if snd x = 0L then Int64.MaxValue else snd x) |> fst
         rotate matrix minIdx 1 size
-        matrix.[size + 1] <- matrix.[1]
+        matrix[size + 1] <- matrix[1]
         
         let mutable i = 1
         let cp: int64 array = Array.zeroCreate (size + 2)
 
         while i < size + 2 do
-            cp.[i] <- matrix.[i] * matrix.[i - 1] + cp.[i - 1]
+            cp[i] <- matrix[i] * matrix[i - 1] + cp[i - 1]
             i <- i + 1
 
         let mutable list = []
@@ -247,7 +247,7 @@ let main _ =
         let mutable temp, i = [], 1
 
         while i < size + 1 do
-            while Stack.length stack >= 2 && matrix.[Stack.head stack] > matrix.[i] do
+            while Stack.length stack >= 2 && matrix[Stack.head stack] > matrix[i] do
                 temp <- (Stack.second stack, i) :: temp
                 stack <- snd <| Stack.pop stack
             stack <- Stack.push stack i
@@ -269,27 +269,27 @@ let main _ =
         let newHArc u v =
             // Assume that u <= v
             numHArc <- numHArc + 1
-            let mul = matrix.[u] * matrix.[v]
-            hArcs.[numHArc] <- { 
+            let mul = matrix[u] * matrix[v]
+            hArcs[numHArc] <- { 
                 Id = numHArc;
                 U = u; V = v;
-                Low = if matrix.[u] < matrix.[v] then u else v;
+                Low = if matrix[u] < matrix[v] then u else v;
                 Mul = mul;
-                Base = cp.[v] - cp.[u] - mul;
+                Base = cp[v] - cp[u] - mul;
                 Num = 0L; Density = 0L }
 
         let childs = Array.init (List.length list + 2) (fun _ -> Stack.empty<int>)
         let mutable stack = Stack.empty<int>
-        hArcs.[0] <- HArc.Default
+        hArcs[0] <- HArc.Default
         newHArc <|| (1, size + 1) // root
         list
         |> List.iter (fun x ->
             newHArc <|| (fst x, snd x)
-            while not <| Stack.isEmpty stack && hArcs.[numHArc].contains hArcs.[Stack.head stack] do
+            while not <| Stack.isEmpty stack && hArcs[numHArc].contains hArcs[Stack.head stack] do
                 Stack.pop stack
                 |> function
                     | v, s ->
-                        childs.[numHArc] <- Stack.push childs.[numHArc] v
+                        childs[numHArc] <- Stack.push childs[numHArc] v
                         stack <- s
             stack <- Stack.push stack numHArc)
 
@@ -297,7 +297,7 @@ let main _ =
             Stack.pop stack
             |> function
                 | v, s -> 
-                    childs.[1] <- Stack.push childs.[1] v
+                    childs[1] <- Stack.push childs[1] v
                     stack <- s
 
         // Find an answer
@@ -309,88 +309,88 @@ let main _ =
 
         let Multiply node =
             if node = 1 then
-                matrix.[1] * matrix.[2] + matrix.[1] * matrix.[size]
-            elif hArcs.[node].U = hArcs.[node].Low then
-                if Stack.isEmpty con.[hArcs.[node].U] || not <| hArcs.[node].contains (Stack.head con.[hArcs.[node].U])
-                then matrix.[hArcs.[node].U] * matrix.[hArcs.[node].U + 1]
-                else (Stack.head con.[hArcs.[node].U]).Mul
+                matrix[1] * matrix[2] + matrix[1] * matrix[size]
+            elif hArcs[node].U = hArcs[node].Low then
+                if Stack.isEmpty con[hArcs[node].U] || not <| hArcs[node].contains (Stack.head con[hArcs[node].U])
+                then matrix[hArcs[node].U] * matrix[hArcs[node].U + 1]
+                else (Stack.head con[hArcs[node].U]).Mul
             else
-                if Stack.isEmpty con.[hArcs.[node].V] || not <| hArcs.[node].contains (Stack.head con.[hArcs.[node].V])
-                then matrix.[hArcs.[node].V] * matrix.[hArcs.[node].V - 1]
-                else (Stack.head con.[hArcs.[node].V]).Mul
+                if Stack.isEmpty con[hArcs[node].V] || not <| hArcs[node].contains (Stack.head con[hArcs[node].V])
+                then matrix[hArcs[node].V] * matrix[hArcs[node].V - 1]
+                else (Stack.head con[hArcs[node].V]).Mul
 
         let addArc node harc =
-            pq.[qid.[node]] <- PriorityQueue.push pq.[qid.[node]] harc
-            con.[harc.U] <- Stack.push con.[harc.U] harc
-            con.[harc.V] <- Stack.push con.[harc.V] harc
+            pq[qid[node]] <- PriorityQueue.push pq[qid[node]] harc
+            con[harc.U] <- Stack.push con[harc.U] harc
+            con[harc.V] <- Stack.push con[harc.V] harc
 
         let removeArc node =
-            PriorityQueue.pop pq.[qid.[node]]
+            PriorityQueue.pop pq[qid[node]]
             |> function
                 | v, q ->
-                    con.[v.U] <- snd <| Stack.pop con.[v.U]
-                    con.[v.V] <- snd <| Stack.pop con.[v.V]
-                    pq.[qid.[node]] <- q
+                    con[v.U] <- snd <| Stack.pop con[v.U]
+                    con[v.V] <- snd <| Stack.pop con[v.V]
+                    pq[qid[node]] <- q
 
         let mergePq node =
             let mutable maxChild = -1
 
-            childs.[node]
-            |> Seq.iter (fun x -> if maxChild = -1 || sub.[maxChild] < sub.[x] then maxChild <- x)
+            childs[node]
+            |> Seq.iter (fun x -> if maxChild = -1 || sub[maxChild] < sub[x] then maxChild <- x)
 
-            qid.[node] <- qid.[maxChild]
+            qid[node] <- qid[maxChild]
 
-            childs.[node]
-            |> Seq.iter (fun x -> if x <> maxChild then pq.[qid.[node]] <- PriorityQueue.Merge pq.[qid.[node]] pq.[qid.[x]])
+            childs[node]
+            |> Seq.iter (fun x -> if x <> maxChild then pq[qid[node]] <- PriorityQueue.Merge pq[qid[node]] pq[qid[x]])
 
         let rec dfs node =
-            sub.[node] <- 1
-            if Stack.isEmpty childs.[node]
+            sub[node] <- 1
+            if Stack.isEmpty childs[node]
             then
                 pqs <- pqs + 1
-                qid.[node] <- pqs
-                hArcs.[node].Density <- hArcs.[node].Base
-                hArcs.[node].Num <- matrix.[hArcs.[node].Low] * (hArcs.[node].Density + hArcs.[node].Mul - Multiply node)
-                addArc node hArcs.[node]
+                qid[node] <- pqs
+                hArcs[node].Density <- hArcs[node].Base
+                hArcs[node].Num <- matrix[hArcs[node].Low] * (hArcs[node].Density + hArcs[node].Mul - Multiply node)
+                addArc node hArcs[node]
             else
-                hArcs.[node].Density <- hArcs.[node].Base
-                childs.[node]
+                hArcs[node].Density <- hArcs[node].Base
+                childs[node]
                 |> Seq.iter (fun x -> 
                     dfs x
-                    sub.[node] <- sub.[node] + sub.[x]
-                    hArcs.[node].Density <- hArcs.[node].Density - hArcs.[x].Base)
+                    sub[node] <- sub[node] + sub[x]
+                    hArcs[node].Density <- hArcs[node].Density - hArcs[x].Base)
 
-                hArcs.[node].Num <- matrix.[hArcs.[node].Low] * (hArcs.[node].Density + hArcs.[node].Mul - Multiply node)
+                hArcs[node].Num <- matrix[hArcs[node].Low] * (hArcs[node].Density + hArcs[node].Mul - Multiply node)
                 mergePq node
 
-                while not <| PriorityQueue.isEmpty pq.[qid.[node]] && (PriorityQueue.peek pq.[qid.[node]]).Support >= matrix.[hArcs.[node].Low] do
-                    let top = PriorityQueue.peek pq.[qid.[node]]
-                    hArcs.[node].Density <- hArcs.[node].Density + top.Density
+                while not <| PriorityQueue.isEmpty pq[qid[node]] && (PriorityQueue.peek pq[qid[node]]).Support >= matrix[hArcs[node].Low] do
+                    let top = PriorityQueue.peek pq[qid[node]]
+                    hArcs[node].Density <- hArcs[node].Density + top.Density
                     removeArc node
-                    hArcs.[node].Num <- matrix.[hArcs.[node].Low] * (hArcs.[node].Density + hArcs.[node].Mul - Multiply node)
+                    hArcs[node].Num <- matrix[hArcs[node].Low] * (hArcs[node].Density + hArcs[node].Mul - Multiply node)
 
-                while not <| PriorityQueue.isEmpty pq.[qid.[node]] && hArcs.[node] <= PriorityQueue.peek pq.[qid.[node]] do
-                    let top = PriorityQueue.peek pq.[qid.[node]]
-                    hArcs.[node].Density <- hArcs.[node].Density + top.Density
+                while not <| PriorityQueue.isEmpty pq[qid[node]] && hArcs[node] <= PriorityQueue.peek pq[qid[node]] do
+                    let top = PriorityQueue.peek pq[qid[node]]
+                    hArcs[node].Density <- hArcs[node].Density + top.Density
                     removeArc node
-                    hArcs.[node].Num <- hArcs.[node].Num + top.Num
+                    hArcs[node].Num <- hArcs[node].Num + top.Num
 
-                addArc node hArcs.[node]
+                addArc node hArcs[node]
 
         let mutable answer = 0L
         dfs 1
-        while not <| PriorityQueue.isEmpty pq.[qid.[1]] do
-            PriorityQueue.pop pq.[qid.[1]]
+        while not <| PriorityQueue.isEmpty pq[qid[1]] do
+            PriorityQueue.pop pq[qid[1]]
             |> function
                 | v, q ->
                     answer <- answer + v.Num
-                    pq.[qid.[1]] <- q
+                    pq[qid[1]] <- q
 
         answer
 
     match size with
     | s when s < 2 -> printfn "0"
-    | 2 -> matrix.[1] * matrix.[2] |> printfn "%d"
+    | 2 -> matrix[1] * matrix[2] |> printfn "%d"
     | _ -> solve |> printfn "%d"
 
     0
