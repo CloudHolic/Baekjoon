@@ -21,7 +21,7 @@ let main _ =
         let n = stream.ReadLine() |> int64
         match n with
         | 2L -> result.AppendFormat("Case #{0}: {1:D3}\n", i, 27) |> ignore
-        | _ -> result.AppendFormat("Case #{0}: {1:D3}\n", i, precomputeArr.[(n - 3L) % 100L |> int] - 1) |> ignore
+        | _ -> result.AppendFormat("Case #{0}: {1:D3}\n", i, precomputeArr[(n - 3L) % 100L |> int] - 1) |> ignore
 
     printfn "%A" result
     0

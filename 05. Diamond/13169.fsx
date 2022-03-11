@@ -9,12 +9,12 @@ let main _ =
         let rec powerset (xs: int64 list) =
             match xs with
             | [] ->
-                result.[idx] <- 0L
+                result[idx] <- 0L
                 idx <- idx + 1
             | h::t ->
                 powerset t
                 for i in 0 .. idx - 1 do
-                    result.[i + idx] <- h + result.[i]
+                    result[i + idx] <- h + result[i]
                 idx <- idx * 2
     
         powerset lst
@@ -25,7 +25,7 @@ let main _ =
         | -1 -> None
         | _ ->
             let mid = (beg + en) / 2
-            match sign <| compare target arr.[mid] with
+            match sign <| compare target arr[mid] with
             | 1 -> lowerBound target arr (mid + 1) en
             | _ ->
                 if beg < mid then
@@ -39,11 +39,11 @@ let main _ =
     let nums = stream.ReadLine().Split() |> Array.map int64 |> Array.toList
     
     match size with
-    | 1 -> printfn "%d" nums.[0]
+    | 1 -> printfn "%d" nums[0]
     | _ ->
         let mid = (size + 1) / 2
-        let leftSum = subSum nums.[0 .. mid - 1]
-        let rightSum = subSum nums.[mid .. size - 1]
+        let leftSum = subSum nums[0 .. mid - 1]
+        let rightSum = subSum nums[mid .. size - 1]
 
         let leftSize = leftSum.Length
         let rightSize = rightSum.Length
@@ -54,12 +54,12 @@ let main _ =
             let mutable a, b = 0, 0
 
             for j in 0 .. leftSize - 1 do
-                a <- a + int (leftSum.[j] / cur &&& 1L)
-                leftSum.[j] <- leftSum.[j] % cur
+                a <- a + int (leftSum[j] / cur &&& 1L)
+                leftSum[j] <- leftSum[j] % cur
 
             for j in 0 .. rightSize - 1 do
-                b <- b + int (rightSum.[j] / cur &&& 1L)
-                rightSum.[j] <- rightSum.[j] % cur
+                b <- b + int (rightSum[j] / cur &&& 1L)
+                rightSum[j] <- rightSum[j] % cur
             
             let calc = leftSize - a &&& b &&& 1 ^^^ rightSize - b &&& a &&& 1 |> int64
             answer <- answer <<< 1 ||| calc

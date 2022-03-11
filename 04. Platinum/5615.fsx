@@ -16,7 +16,7 @@ let main _ =
             binaryList
             |> List.mapi (fun i x ->
                 match x with
-                | 1UL -> expArr.[i]
+                | 1UL -> expArr[i]
                 | _ -> 1UL)
             |> List.fold (fun acc x -> mul acc x) 1UL
             

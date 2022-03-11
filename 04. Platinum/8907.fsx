@@ -17,8 +17,8 @@ let main _ =
             let group = 
                 match i with 
                 | 1 -> [||]
-                | _ -> [0..(i - 2)] |> List.map (fun x -> triangle.[x].[i - x - 2]) |> List.toArray
-                |> Array.append <| if i = n then [||] else triangle.[i - 1]
+                | _ -> [0..(i - 2)] |> List.map (fun x -> triangle[x][i - x - 2]) |> List.toArray
+                |> Array.append <| if i = n then [||] else triangle[i - 1]
                 |> Array.countBy (fun x -> x)
             match Array.length group with
             | 1 -> 0

@@ -27,10 +27,10 @@ let main _ =
 
             let mutable flag, j = true, 0
             while flag do
-                match indexUsed.[j], List.length curNums with
+                match indexUsed[j], List.length curNums with
                 | true, _ -> ()
                 | _, s when s < 2 * a - 1 ->
-                    curNums <- (nums.[j] % a) :: curNums
+                    curNums <- (nums[j] % a) :: curNums
                 | _ -> flag <- false
 
                 match j with
@@ -40,12 +40,12 @@ let main _ =
             let curAnswer = curNums |> List.rev |> Array.ofList |> solve a
             let mutable flag, j, k = true, 0, 0
             while flag do
-                match indexUsed.[j], curAnswer.[k] with
+                match indexUsed[j], curAnswer[k] with
                 | true, _ -> ()
                 | _, true ->
-                    let tup = subAnswers.[i]
-                    subAnswers.[i] <- (nums.[j] + fst tup, j :: snd tup)
-                    indexUsed.[j] <- true
+                    let tup = subAnswers[i]
+                    subAnswers[i] <- (nums[j] + fst tup, j :: snd tup)
+                    indexUsed[j] <- true
                     k <- k + 1
                 | _ -> k <- k + 1
 
@@ -58,14 +58,14 @@ let main _ =
         |> solve b
         |> Array.iteri (fun i x -> 
             match x with
-            | true -> snd subAnswers.[i] |> List.iter (fun y -> result.[y] <- true)
+            | true -> snd subAnswers[i] |> List.iter (fun y -> result[y] <- true)
             | _ -> ())
 
         result
 
     and solvePrime p nums : bool[] =
         let result: bool[] = Array.zeroCreate (2 * p - 1)
-        let idx = Array.init (2 * p - 1) (fun i -> i) |> Array.sortBy (fun x -> nums.[x])
+        let idx = Array.init (2 * p - 1) (fun i -> i) |> Array.sortBy (fun x -> nums[x])
 
         let checkDuplicate =
             let mutable dup = -1
@@ -73,35 +73,35 @@ let main _ =
             |> List.iter (fun x ->
                 match dup, x with
                 | i, _ when i > 0 -> ()
-                | -1, x when nums.[idx.[x]] = nums.[idx.[x + p - 1]] -> dup <- x
+                | -1, x when nums[idx[x]] = nums[idx[x + p - 1]] -> dup <- x
                 | _ -> ())
             dup
 
         match checkDuplicate with
         | -1 ->
             let sumList = Array2D.init p p (fun _ _ -> -1)
-            sumList.[0, nums.[idx.[0]]] <- idx.[0]
+            sumList[0, nums[idx[0]]] <- idx[0]
             for i in 1 .. p - 1 do
                 for j in 0 .. p - 1 do
-                    match sumList.[i - 1, j] with
+                    match sumList[i - 1, j] with
                     | -1 -> ()
                     | _ ->
-                        let a_sum = (j + nums.[idx.[i]]) % p
-                        let b_sum = (j + nums.[idx.[i + p - 1]]) % p
+                        let a_sum = (j + nums[idx[i]]) % p
+                        let b_sum = (j + nums[idx[i + p - 1]]) % p
                         
-                        if sumList.[i, a_sum] = -1 then
-                            sumList.[i, a_sum] <- idx.[i]
+                        if sumList[i, a_sum] = -1 then
+                            sumList[i, a_sum] <- idx[i]
 
-                        if b_sum <> a_sum && sumList.[i, b_sum] = -1 then
-                            sumList.[i, b_sum] <- idx.[i + p - 1]
+                        if b_sum <> a_sum && sumList[i, b_sum] = -1 then
+                            sumList[i, b_sum] <- idx[i + p - 1]
             
             let mutable curSum = 0
             for i in p - 1 .. -1 .. 0 do
-                result.[sumList.[i, curSum]] <- true
-                curSum <- (curSum - nums.[sumList.[i, curSum]] + p) % p
+                result[sumList[i, curSum]] <- true
+                curSum <- (curSum - nums[sumList[i, curSum]] + p) % p
         | i ->
             for j in i .. i + p - 1 do
-                result.[idx.[j]] <- true
+                result[idx[j]] <- true
 
         result
             
@@ -110,10 +110,10 @@ let main _ =
     let nums = stream.ReadLine().Trim().Split() |> Array.map int
 
     match size with
-    | 1 -> printfn "%d" nums.[0]
+    | 1 -> printfn "%d" nums[0]
     | _ ->        
         let result = new StringBuilder()
         solve size nums
-        |> Array.iteri (fun i x -> if x then result.AppendFormat("{0} ", nums.[i]) |> ignore)
+        |> Array.iteri (fun i x -> if x then result.AppendFormat("{0} ", nums[i]) |> ignore)
         printfn "%A" result
     0

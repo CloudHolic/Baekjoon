@@ -16,30 +16,30 @@ let main _ =
     let cache : int[,] = Array2D.zeroCreate <|| (len1 + 2, len2 + 2)
     let da_cache: int[] = Array.init 26 (fun _ -> 1)
 
-    cache.[0, 0] <- len1 + len2
+    cache[0, 0] <- len1 + len2
     for i in 1 .. len1 + 1 do
-        cache.[i, 0] <- cache.[0, 0]
-        cache.[i, 1] <- i - 1
+        cache[i, 0] <- cache[0, 0]
+        cache[i, 1] <- i - 1
 
     for j in 1 .. len2 + 1 do
-        cache.[0, j] <- cache.[0, 0]
-        cache.[1, j] <- j - 1
+        cache[0, j] <- cache[0, 0]
+        cache[1, j] <- j - 1
 
     for i in 2 .. len1 + 1 do
         let mutable db = 1
 
         for j in 2 .. len2 + 1 do
-            let k = da_cache.[int str2.[j - 2] - int 'a']
+            let k = da_cache[int str2[j - 2] - int 'a']
             let l = db
             let mutable cost = 0
 
             match (i, j) with
-            | _ when str1.[i - 2] = str2.[j - 2] -> db <- j
+            | _ when str1[i - 2] = str2[j - 2] -> db <- j
             | _ -> cost <- 1
 
-            cache.[i, j] <- min4 (cache.[i, j - 1] + 1, cache.[i - 1, j] + 1, cache.[i - 1, j - 1] + cost, cache.[k - 1, l - 1] + i + j - k - l - 1)
+            cache[i, j] <- min4 (cache[i, j - 1] + 1, cache[i - 1, j] + 1, cache[i - 1, j - 1] + cost, cache[k - 1, l - 1] + i + j - k - l - 1)
 
-        da_cache.[int str1.[i - 2] - int 'a'] <- i
+        da_cache[int str1[i - 2] - int 'a'] <- i
 
-    printfn "%d" cache.[len1 + 1, len2 + 1]
+    printfn "%d" cache[len1 + 1, len2 + 1]
     0

@@ -21,11 +21,11 @@ module FastFourierTransform =
                 for i in 0 .. ln .. n - 1 do
                     let mutable w = Complex(1., 0.)
                     for j = 0 to ln / 2 - 1 do
-                        let u = result.[i + j]
-                        let v = result.[i + j + ln / 2] * w
+                        let u = result[i + j]
+                        let v = result[i + j + ln / 2] * w
 
-                        result.[i + j] <- u + v
-                        result.[i + j + ln / 2] <- u - v
+                        result[i + j] <- u + v
+                        result[i + j + ln / 2] <- u - v
 
                         w <- w * roots
 
@@ -40,9 +40,9 @@ module FastFourierTransform =
             j <- j + bit
 
             if i < j then
-                let temp = result.[i]
-                result.[i] <- result.[j]
-                result.[j] <- temp
+                let temp = result[i]
+                result[i] <- result[j]
+                result[j] <- temp
 
         loop 2 invert
         if invert then result |> Array.map (fun i -> i / Complex(float n, 0.)) else result
@@ -53,10 +53,10 @@ let main _ =
     let n = stream.ReadLine() |> int
     let nums : Complex array = Array.zeroCreate 524288
 
-    nums.[0] <- Complex(1., 0.)
+    nums[0] <- Complex(1., 0.)
     for _ = 1 to n do
         let num = stream.ReadLine() |> int
-        nums.[num] <- Complex(1., 0.)
+        nums[num] <- Complex(1., 0.)
 
     let res = 
         nums
@@ -68,7 +68,7 @@ let main _ =
     let mutable count = 0
     for _ = 1 to m do
         let cur = stream.ReadLine() |> int
-        if res.[cur] > 0 then count <- count + 1
+        if res[cur] > 0 then count <- count + 1
     
     printfn "%d" count
     0

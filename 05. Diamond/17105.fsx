@@ -23,11 +23,11 @@ module FastFourierTransform =
                 for i in 0 .. ln .. n - 1 do
                     let mutable w = Complex(1., 0.)
                     for j = 0 to ln / 2 - 1 do
-                        let u = result.[i + j]
-                        let v = result.[i + j + ln / 2] * w
+                        let u = result[i + j]
+                        let v = result[i + j + ln / 2] * w
 
-                        result.[i + j] <- u + v
-                        result.[i + j + ln / 2] <- u - v
+                        result[i + j] <- u + v
+                        result[i + j + ln / 2] <- u - v
 
                         w <- w * roots
 
@@ -42,9 +42,9 @@ module FastFourierTransform =
             j <- j + bit
 
             if i < j then
-                let temp = result.[i]
-                result.[i] <- result.[j]
-                result.[j] <- temp
+                let temp = result[i]
+                result[i] <- result[j]
+                result[j] <- temp
 
         loop 2 invert
         if invert then result |> Array.map (fun i -> i / Complex(float n, 0.)) else result
@@ -71,11 +71,11 @@ let main _ =
 
         let mutable m = 1
         while 2 * m + 1 <= max do
-           if sieve.[m] then
+           if sieve[m] then
                let n = 2 * m + 1
                if n <= upper then 
                    let mutable i = m
-                   while 2 * i < max do sieve.[i] <- false; i <- i + n
+                   while 2 * i < max do sieve[i] <- false; i <- i + n
                result.Add n
            m <- m + 1
     
@@ -92,8 +92,8 @@ let main _ =
     for i in primeList do
         if i = 2 then ()
         else 
-            x.[(i - 1) / 2] <- Complex(1., 0.)
-            if i < 500000 then square.[i - 1] <- Complex(1., 0.)
+            x[(i - 1) / 2] <- Complex(1., 0.)
+            if i < 500000 then square[i - 1] <- Complex(1., 0.)
 
     let transform = FastFourierTransform.fft x false
     let res = 
@@ -119,8 +119,8 @@ let main _ =
         let mutable dup = 0
         if cur % 3 = 0 && cur / 3 |> isPrime then dup <- 1
 
-        let semiDup = (dupMul.[(cur - 1) / 2 - 1] - dup)
-        let noDup = (mul.[(cur - 1) / 2 - 1] - 3 * semiDup - dup) / 6
+        let semiDup = (dupMul[(cur - 1) / 2 - 1] - dup)
+        let noDup = (mul[(cur - 1) / 2 - 1] - 3 * semiDup - dup) / 6
 
         let count = noDup + semiDup + dup + evenDup
         result.AppendFormat("{0}\n", count) |> ignore

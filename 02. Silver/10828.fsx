@@ -57,7 +57,7 @@ let main _ =
     let solve (str : string) =
         match str with
         | p when p.StartsWith "push" ->
-            stack <- Stack.push stack <| (int <| p.Split().[1])
+            stack <- Stack.push stack <| (int <| p.Split()[1])
         | "pop" ->
             Stack.tryPop stack
             |> function

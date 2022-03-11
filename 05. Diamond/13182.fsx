@@ -26,7 +26,7 @@ module Modulo =
         binaryList
         |> List.mapi (fun i x ->
             match x with
-            | 1L -> expArr.[i]
+            | 1L -> expArr[i]
             | _ -> 1L)
         |> List.fold (fun acc x -> mul acc x) 1L
       
@@ -51,7 +51,7 @@ let main _ =
 
     let rec solve times =
         if times > 0 then
-            let r, g, b, k = stream.ReadLine() |> parseInts |> function | nums -> nums.[0], nums.[1], nums.[2], nums.[3]
+            let r, g, b, k = stream.ReadLine() |> parseInts |> function | nums -> nums[0], nums[1], nums[2], nums[3]
             let mul1 = Mul g k  // G * k
             let mul2 = Mul b k  // B * k
             let mul3 = Mul r b  // R * B

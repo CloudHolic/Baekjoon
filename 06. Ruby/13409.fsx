@@ -23,12 +23,12 @@ let main _ =
         let rec powerset (xs: (int64 * int) list) =
             match xs with
             | [] ->
-                result.[idx] <- (0L, 0)
+                result[idx] <- (0L, 0)
                 idx <- idx + 1
             | h::t ->
                 powerset t
                 for i in 0 .. idx - 1 do
-                    result.[i + idx] <- (fst h + fst result.[i], snd h + snd result.[i])
+                    result[i + idx] <- (fst h + fst result[i], snd h + snd result[i])
                 idx <- idx * 2
         
         powerset lst
@@ -41,8 +41,8 @@ let main _ =
     let piles = Array.init size (fun _ -> stream.ReadLine())
 
     let scoreArr = piles |> Array.map calcScore |> Array.toList
-    let leftSum = subSum scoreArr.[0 .. mid - 1]
-    let rightSum = subSum scoreArr.[mid .. size - 1]
+    let leftSum = subSum scoreArr[0 .. mid - 1]
+    let rightSum = subSum scoreArr[mid .. size - 1]
 
     let leftSize = leftSum.Length - 1
     let rightSize = rightSum.Length - 1
@@ -52,24 +52,24 @@ let main _ =
     let mutable answer = 0
 
     while leftIdx >= 0 && rightIdx <= rightSize do
-        let sum = fst leftSum.[leftIdx] + fst rightSum.[rightIdx]
+        let sum = fst leftSum[leftIdx] + fst rightSum[rightIdx]
         match sum with
         | s when s > 0L -> leftIdx <- leftIdx - 1
         | s when s < 0L -> rightIdx <- rightIdx + 1
         | _ -> 
-            let mutable leftMax = snd leftSum.[leftIdx]
-            let mutable rightMax = snd rightSum.[rightIdx]
-            let mutable flag = leftIdx > 0 && fst leftSum.[leftIdx - 1] = fst leftSum.[leftIdx]
+            let mutable leftMax = snd leftSum[leftIdx]
+            let mutable rightMax = snd rightSum[rightIdx]
+            let mutable flag = leftIdx > 0 && fst leftSum[leftIdx - 1] = fst leftSum[leftIdx]
             while flag do
                 leftIdx <- leftIdx - 1
-                leftMax <- (leftMax, snd leftSum.[leftIdx]) ||> max
-                flag <- leftIdx > 0 && fst leftSum.[leftIdx - 1] = fst leftSum.[leftIdx]
+                leftMax <- (leftMax, snd leftSum[leftIdx]) ||> max
+                flag <- leftIdx > 0 && fst leftSum[leftIdx - 1] = fst leftSum[leftIdx]
 
-            flag <- rightIdx < rightSize && fst rightSum.[rightIdx + 1] = fst rightSum.[rightIdx]
+            flag <- rightIdx < rightSize && fst rightSum[rightIdx + 1] = fst rightSum[rightIdx]
             while flag do
                 rightIdx <- rightIdx + 1
-                rightMax <- (rightMax, snd rightSum.[rightIdx]) ||> max
-                flag <- rightIdx < rightSize && fst rightSum.[rightIdx + 1] = fst rightSum.[rightIdx]
+                rightMax <- (rightMax, snd rightSum[rightIdx]) ||> max
+                flag <- rightIdx < rightSize && fst rightSum[rightIdx + 1] = fst rightSum[rightIdx]
 
             answer <- (answer, leftMax + rightMax) ||> max
             leftIdx <- leftIdx - 1

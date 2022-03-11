@@ -37,7 +37,7 @@ type SegmentTree<'T> =
     member this.Query1 left right =
         let rec query k st en =
             if left > en || right < st then this.init
-            else if left <= st && en <= right then this.node1.[k]
+            else if left <= st && en <= right then this.node1[k]
             else
                 let mid = (st + en) >>> 1
                 ((SegmentTree<'T>.LeftChild k, st, mid) |||> query, (SegmentTree<'T>.RightChild k, mid + 1, en) |||> query) ||> this.op1
@@ -47,7 +47,7 @@ type SegmentTree<'T> =
     member this.Query2 left right =
         let rec query k st en =
             if left > en || right < st then this.init
-            else if left <= st && en <= right then this.node2.[k]
+            else if left <= st && en <= right then this.node2[k]
             else
                 let mid = (st + en) >>> 1
                 ((SegmentTree<'T>.LeftChild k, st, mid) |||> query, (SegmentTree<'T>.RightChild k, mid + 1, en) |||> query) ||> this.op2
@@ -58,15 +58,15 @@ type SegmentTree<'T> =
         let rec update k st en =
             if index < st || index > en then ()
             else if st = en then
-                this.node1.[k] <- (this.node1.[k], value) ||> this.op1
-                this.node2.[k] <- (this.node2.[k], value) ||> this.op1
+                this.node1[k] <- (this.node1[k], value) ||> this.op1
+                this.node2[k] <- (this.node2[k], value) ||> this.op1
             else
                 let mid = (st + en) >>> 1
                 (SegmentTree<'T>.LeftChild k, st, mid) |||> update
                 (SegmentTree<'T>.RightChild k, mid + 1, en) |||> update
 
-                this.node1.[k] <- (this.node1.[SegmentTree<'T>.LeftChild k], this.node1.[SegmentTree<'T>.RightChild k]) ||> this.op1
-                this.node2.[k] <- (this.node1.[SegmentTree<'T>.LeftChild k], this.node1.[SegmentTree<'T>.RightChild k]) ||> this.op2
+                this.node1[k] <- (this.node1[SegmentTree<'T>.LeftChild k], this.node1[SegmentTree<'T>.RightChild k]) ||> this.op1
+                this.node2[k] <- (this.node1[SegmentTree<'T>.LeftChild k], this.node1[SegmentTree<'T>.RightChild k]) ||> this.op2
 
         update 1 1 this.size |> ignore
 
@@ -89,22 +89,22 @@ let main _ =
     let segtree = SegmentTree<int64>(n, (+), gcd, 0L)
 
     for i = 1 to n do
-        let prev = if i = 1 then 0L else nums.[i - 2]
-        nums.[i - 1] - prev |> segtree.Update i
+        let prev = if i = 1 then 0L else nums[i - 2]
+        nums[i - 1] - prev |> segtree.Update i
     
     let q = stream.ReadLine().Trim() |> int
     let rec solve times =
         if times > 0 then
             let query = stream.ReadLine() |> parseInts int
-            match int64 query.[0] with
+            match int64 query[0] with
             | 0L ->
-                let a = (1, query.[1]) ||> segtree.Query1
-                let b = (1, query.[2]) ||> segtree.Query1
-                let g = (query.[1] + 1, query.[2]) ||> segtree.Query2
+                let a = (1, query[1]) ||> segtree.Query1
+                let b = (1, query[2]) ||> segtree.Query1
+                let g = (query[1] + 1, query[2]) ||> segtree.Query2
                 result.AppendFormat("{0}\n", ((a, b) ||> gcd, g) ||> gcd) |> ignore
             | t ->
-                (query.[1], t) ||> segtree.Update
-                (query.[2] + 1, -t) ||> segtree.Update
+                (query[1], t) ||> segtree.Update
+                (query[2] + 1, -t) ||> segtree.Update
 
             times - 1 |> solve
 

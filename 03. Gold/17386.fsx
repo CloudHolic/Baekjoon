@@ -3,12 +3,12 @@ open System
 [<EntryPoint>]
 let main _ =
     let makePoints = Array.map int64
-    let splitPoint (a: int64 []) = (a.[0 .. 1], a.[2 .. 3])
+    let splitPoint (a: int64 []) = (a[0 .. 1], a[2 .. 3])
     let ccw a b c =
         let makeVec = Array.map2 (fun x y -> x - y)
         let vec1 = makeVec b a
         let vec2 = makeVec c b
-        vec1.[0] * vec2.[1] - vec1.[1] * vec2.[0]
+        vec1[0] * vec2[1] - vec1[1] * vec2[0]
         |> function
             | c when c < 0L -> -1
             | c when c > 0L -> 1

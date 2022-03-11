@@ -25,7 +25,7 @@ let main _ =
                 match x with
                 | c when Char.IsDigit c -> number.Append(c) |> ignore
                 | c when ['+'; '-'; '*'; '/'] |> List.contains c ->
-                    if number.Length = 0 && eq.[i - 1] <> ')' then raise <| Error()
+                    if number.Length = 0 && eq[i - 1] <> ')' then raise <| Error()
                     if number.Length > 0 then postFix <- number.ToString() :: postFix
                     number.Clear() |> ignore
 
@@ -38,7 +38,7 @@ let main _ =
                         operators.Push <| string c
                 | '(' -> operators.Push "("
                 | ')' ->
-                    if number.Length = 0 && eq.[i - 1] = ')' then raise <| Error()
+                    if number.Length = 0 && eq[i - 1] = ')' then raise <| Error()
                     if number.Length > 0 then postFix <- number.ToString() :: postFix
                     number.Clear() |> ignore
 
@@ -49,7 +49,7 @@ let main _ =
                     operators.Pop() |> ignore
                 | _ -> raise <| Error())
 
-            if number.Length = 0 && eq.[eq.Length - 1] <> ')' then raise <| Error()
+            if number.Length = 0 && eq[eq.Length - 1] <> ')' then raise <| Error()
             if number.Length > 0 then postFix <- number.ToString() :: postFix
 
             let mutable flag = operators.Count > 0

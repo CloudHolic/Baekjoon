@@ -69,7 +69,7 @@ let main _ =
     let solve (str : string) =
         match str with
         | p when p.StartsWith "push" ->
-            let x = int <| p.Split().[1]
+            let x = int <| p.Split()[1]
             lastEnqueue <- x
             queue <- Queue.enqueue queue x
         | "pop" ->

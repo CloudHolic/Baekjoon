@@ -16,8 +16,8 @@ let main _ =
     for i in 1 .. len1 do
         for j in 1 .. len2 do
             match (i, j) with
-            | (a, b) when str1.[a - 1] = str2.[b - 1] -> cache.[a, b] <- cache.[a - 1, b - 1] + 1
-            | _ -> cache.[i, j] <- max <|| (cache.[i - 1, j], cache.[i, j - 1])
+            | (a, b) when str1[a - 1] = str2[b - 1] -> cache[a, b] <- cache[a - 1, b - 1] + 1
+            | _ -> cache[i, j] <- max <|| (cache[i - 1, j], cache[i, j - 1])
 
-    printfn "%d" cache.[len1, len2]
+    printfn "%d" cache[len1, len2]
     0

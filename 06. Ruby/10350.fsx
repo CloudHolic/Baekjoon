@@ -14,7 +14,7 @@ let main _ =
     let subSum idx =
         let mutable curSum = 0
         for i in idx .. size + idx - 1 do
-            curSum <- curSum + money.[i % size]
+            curSum <- curSum + money[i % size]
             if curSum < 0 then
                 let count = (abs curSum - 1) / totalSum + 1
                 answer <- answer + int64 count

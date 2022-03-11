@@ -6,7 +6,7 @@ let main _ =
     let parseFloats (str: string) = str.Trim().Split() |> Array.map float
 
     use stream = new StreamReader(Console.OpenStandardInput())
-    let refund, probability = stream.ReadLine() |> parseFloats |> function | nums -> nums.[0] / 100., nums.[1] / 100.
+    let refund, probability = stream.ReadLine() |> parseFloats |> function | nums -> nums[0] / 100., nums[1] / 100.
 
     let solve win lose =
         let factor = (1. - probability) / probability

@@ -21,11 +21,11 @@ module FastFourierTransform =
                 for i in 0 .. ln .. n - 1 do
                     let mutable w = Complex(1., 0.)
                     for j = 0 to ln / 2 - 1 do
-                        let u = result.[i + j]
-                        let v = result.[i + j + ln / 2] * w
+                        let u = result[i + j]
+                        let v = result[i + j + ln / 2] * w
 
-                        result.[i + j] <- u + v
-                        result.[i + j + ln / 2] <- u - v
+                        result[i + j] <- u + v
+                        result[i + j + ln / 2] <- u - v
 
                         w <- w * roots
 
@@ -40,9 +40,9 @@ module FastFourierTransform =
             j <- j + bit
 
             if i < j then
-                let temp = result.[i]
-                result.[i] <- result.[j]
-                result.[j] <- temp
+                let temp = result[i]
+                result[i] <- result[j]
+                result[j] <- temp
 
         loop 2 invert
         if invert then result |> Array.map (fun i -> i / Complex(float n, 0.)) else result
@@ -58,8 +58,8 @@ let main _ =
     for i = 1 to num - 1 do
         let idx = int64 i * int64 i % int64 num |> int
         let doubleIdx = 2L * int64 i * int64 i % int64 num |> int
-        x.[idx] <- x.[idx] + Complex(1., 0.)
-        eq.[doubleIdx] <- eq.[doubleIdx] + 1
+        x[idx] <- x[idx] + Complex(1., 0.)
+        eq[doubleIdx] <- eq[doubleIdx] + 1
 
     let res =
         FastFourierTransform.fft x false
@@ -69,7 +69,7 @@ let main _ =
     let mutable answer = 0L
     for i = 1 to num - 1 do    
         let cur = int64 i * int64 i % int64 num |> int
-        answer <- answer + int64 (eq.[cur] + res.[cur] + res.[num + cur]) / 2L
+        answer <- answer + int64 (eq[cur] + res[cur] + res[num + cur]) / 2L
 
     printfn "%d" answer
     0

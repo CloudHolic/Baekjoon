@@ -23,11 +23,11 @@ module FastFourierTransform =
                 for i in 0 .. ln .. n - 1 do
                     let mutable w = Complex(1., 0.)
                     for j = 0 to ln / 2 - 1 do
-                        let u = result.[i + j]
-                        let v = result.[i + j + ln / 2] * w
+                        let u = result[i + j]
+                        let v = result[i + j + ln / 2] * w
 
-                        result.[i + j] <- u + v
-                        result.[i + j + ln / 2] <- u - v
+                        result[i + j] <- u + v
+                        result[i + j + ln / 2] <- u - v
 
                         w <- w * roots
 
@@ -42,9 +42,9 @@ module FastFourierTransform =
             j <- j + bit
 
             if i < j then
-                let temp = result.[i]
-                result.[i] <- result.[j]
-                result.[j] <- temp
+                let temp = result[i]
+                result[i] <- result[j]
+                result[j] <- temp
 
         loop 2 invert
         if invert then result |> Array.map (fun i -> i / Complex(float n, 0.)) else result
@@ -57,14 +57,14 @@ let main _ =
     let result = new StringBuilder()
 
     let nums = stream.ReadLine().Trim().Split() |> Array.map toReverseArr
-    let size = max nums.[0].Length nums.[1].Length
+    let size = max nums[0].Length nums[1].Length
 
     let x : Complex array = Array.zeroCreate 2097152
     let y : Complex array = Array.zeroCreate 2097152
         
     for i in 0 .. size - 1 do
-        if i < nums.[0].Length then x.[i] <- Complex(float nums.[0].[i], 0.)
-        if i < nums.[1].Length then y.[i] <- Complex(float nums.[1].[i], 0.)
+        if i < nums[0].Length then x[i] <- Complex(float nums[0][i], 0.)
+        if i < nums[1].Length then y[i] <- Complex(float nums[1][i], 0.)
             
     let stack = new Stack<int>()
     (FastFourierTransform.fft x false, FastFourierTransform.fft y false)

@@ -14,7 +14,7 @@ let main _ =
         match oneCount with
         | n when n &&& 1 = 0 && n > 0 ->
             let index = line |> Array.findIndex (fun x -> x <> 1)
-            line.[index] <- 1
+            line[index] <- 1
         | _ -> ()
 
         let result = line |> Array.fold (fun acc x -> acc ^^^ x) 0

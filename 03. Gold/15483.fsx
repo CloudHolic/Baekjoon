@@ -22,10 +22,10 @@ let main _ =
     for i in 0 .. len1 do
         for j in 0 .. len2 do
             match (i, j) with
-            | (0, 0) -> cache.[i, j] <- 0
-            | (a, 0) -> cache.[i, j] <- a
-            | (0, b) -> cache.[i, j] <- b
-            | _ -> cache.[i, j] <- min3 <||| (cache.[i - 1, j] + 1, cache.[i, j - 1] + 1, cache.[i - 1, j - 1] + (boolToInt <| (str1.[i - 1] <> str2.[j - 1])))
+            | (0, 0) -> cache[i, j] <- 0
+            | (a, 0) -> cache[i, j] <- a
+            | (0, b) -> cache[i, j] <- b
+            | _ -> cache[i, j] <- min3 <||| (cache[i - 1, j] + 1, cache[i, j - 1] + 1, cache[i - 1, j - 1] + (boolToInt <| (str1[i - 1] <> str2[j - 1])))
 
-    printfn "%d" cache.[len1, len2]
+    printfn "%d" cache[len1, len2]
     0

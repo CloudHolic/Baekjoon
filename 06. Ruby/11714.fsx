@@ -21,11 +21,11 @@ module FastFourierTransform =
                 for i in 0 .. ln .. n - 1 do
                     let mutable w = Complex(1., 0.)
                     for j = 0 to ln / 2 - 1 do
-                        let u = result.[i + j]
-                        let v = result.[i + j + ln / 2] * w
+                        let u = result[i + j]
+                        let v = result[i + j + ln / 2] * w
 
-                        result.[i + j] <- u + v
-                        result.[i + j + ln / 2] <- u - v
+                        result[i + j] <- u + v
+                        result[i + j + ln / 2] <- u - v
 
                         w <- w * roots
 
@@ -40,9 +40,9 @@ module FastFourierTransform =
             j <- j + bit
 
             if i < j then
-                let temp = result.[i]
-                result.[i] <- result.[j]
-                result.[j] <- temp
+                let temp = result[i]
+                result[i] <- result[j]
+                result[j] <- temp
 
         loop 2 invert
         if invert then result |> Array.map (fun i -> i / Complex(float n, 0.)) else result
@@ -166,7 +166,7 @@ let main _ =
             match sign <| compare beg en with            
             | -1 -> 
                 let mid = (beg + en) >>> 1
-                match sign <| compare arr.[mid] target with
+                match sign <| compare arr[mid] target with
                 | -1  -> inner arr target (mid + 1) en
                 | _ -> inner arr target beg mid
             | _ -> beg
@@ -178,7 +178,7 @@ let main _ =
             match sign <| compare beg en with
             | -1 ->
                 let mid = (beg + en) >>> 1
-                match sign <| compare arr.[mid] target with
+                match sign <| compare arr[mid] target with
                 | 1 -> inner arr target beg mid
                 | _ -> inner arr target (mid + 1) en
             | _ -> beg
@@ -186,7 +186,7 @@ let main _ =
         inner arr target 0 (Array.length arr)
 
     use stream = new StreamReader(Console.OpenStandardInput())
-    let l, m, n = stream.ReadLine() |> parseInts int |> function | nums -> nums.[0], nums.[1], nums.[2]
+    let l, m, n = stream.ReadLine() |> parseInts int |> function | nums -> nums[0], nums[1], nums[2]
 
     let mutable Apoints: Point[] = Array.zeroCreate l
     let mutable Bpoints: Point[] = Array.zeroCreate m
@@ -201,10 +201,10 @@ let main _ =
         |> parseInts bigint.Parse
         |> function
             | nums -> 
-                if i > 0 && onePointA && (nums.[0] <> Apoints.[i - 1].X || nums.[1] <> Apoints.[i - 1].Y) then
+                if i > 0 && onePointA && (nums[0] <> Apoints[i - 1].X || nums[1] <> Apoints[i - 1].Y) then
                     onePointA <- false
-                    Aline <- Line.CreateNew Apoints.[i - 1] { X = nums.[0]; Y = nums.[1] }
-                Apoints.[i] <- { X = nums.[0]; Y = nums.[1] }
+                    Aline <- Line.CreateNew Apoints[i - 1] { X = nums[0]; Y = nums[1] }
+                Apoints[i] <- { X = nums[0]; Y = nums[1] }
 
     let mutable onePointB = true
     for i = 0 to m - 1 do        
@@ -212,13 +212,13 @@ let main _ =
         |> parseInts bigint.Parse
         |> function 
             | nums -> 
-                if i > 0 && onePointB && (nums.[0] <> Bpoints.[i - 1].X || nums.[1] <> Bpoints.[i - 1].Y) then 
+                if i > 0 && onePointB && (nums[0] <> Bpoints[i - 1].X || nums[1] <> Bpoints[i - 1].Y) then 
                     onePointB <- false
-                    Bline <- Line.CreateNew Bpoints.[i - 1] { X = nums.[0]; Y = nums.[1] }
-                Bpoints.[i] <- { X = nums.[0]; Y = nums.[1] }
+                    Bline <- Line.CreateNew Bpoints[i - 1] { X = nums[0]; Y = nums[1] }
+                Bpoints[i] <- { X = nums[0]; Y = nums[1] }
 
     for i = 0 to n - 1 do
-        stream.ReadLine() |> parseInts bigint.Parse |> function | nums -> Cpoints.[i] <- { X = nums.[0]; Y = nums.[1] }
+        stream.ReadLine() |> parseInts bigint.Parse |> function | nums -> Cpoints[i] <- { X = nums[0]; Y = nums[1] }
 
     let mutable answer = 0L
 
@@ -230,16 +230,16 @@ let main _ =
 
         if onePointA then
             for i = 0 to m - 1 do
-                let sumX = Apoints.[0].X + Bpoints.[i].X
-                let sumY = Apoints.[0].Y + Bpoints.[i].Y
+                let sumX = Apoints[0].X + Bpoints[i].X
+                let sumY = Apoints[0].Y + Bpoints[i].Y
 
                 if sumX &&& 1I = 0I && sumY &&& 1I = 0I then                    
                     let idx = upperBound Cpoints { X = sumX / 2I; Y = sumY / 2I } - lowerBound Cpoints { X = sumX / 2I; Y = sumY / 2I }
                     answer <- answer + int64 idx * int64 l
         else if onePointB then
             for i = 0 to l - 1 do
-                let sumX = Apoints.[i].X + Bpoints.[0].X
-                let sumY = Apoints.[i].Y + Bpoints.[0].Y
+                let sumX = Apoints[i].X + Bpoints[0].X
+                let sumY = Apoints[i].Y + Bpoints[0].Y
 
                 if sumX &&& 1I = 0I && sumY &&& 1I = 0I then                    
                     let idx = upperBound Cpoints { X = sumX / 2I; Y = sumY / 2I } - lowerBound Cpoints { X = sumX / 2I; Y = sumY / 2I }
@@ -263,15 +263,15 @@ let main _ =
         Bpoints <- Bpoints |> Array.sort
         Cpoints <- Cpoints |> Array.sort
 
-        let Aline = Line.CreateNew Apoints.[0] Apoints.[l - 1]
-        let Bline = Line.CreateNew Bpoints.[0] Bpoints.[m - 1]
+        let Aline = Line.CreateNew Apoints[0] Apoints[l - 1]
+        let Bline = Line.CreateNew Bpoints[0] Bpoints[m - 1]
         
         // Case 2: A.Slope <> B.Slope
         if Aline.Slope <> Bline.Slope then
             let diffSlope = Bline.Slope - Aline.Slope
             for i = 0 to n - 1 do
-                let temp1 = (2I * Cpoints.[i].X, 1I) ||> Fraction.CreateNew
-                let temp2 = (Fraction.CreateNew <|| (2I * Cpoints.[i].Y, 1I)) - Aline.Bias - Bline.Bias
+                let temp1 = (2I * Cpoints[i].X, 1I) ||> Fraction.CreateNew
+                let temp2 = (Fraction.CreateNew <|| (2I * Cpoints[i].Y, 1I)) - Aline.Bias - Bline.Bias
 
                 let newX1 = (temp1 * Bline.Slope - temp2) / diffSlope
                 let newX2 = (temp2 - temp1 * Aline.Slope) / diffSlope
@@ -289,12 +289,12 @@ let main _ =
             let y: Complex array = Array.zeroCreate 1048576
 
             for i = 0 to l - 1 do
-                let idx = int Apoints.[i].X + 200000
-                x.[idx] <- x.[idx] + Complex(1., 0.)
+                let idx = int Apoints[i].X + 200000
+                x[idx] <- x[idx] + Complex(1., 0.)
 
             for i = 0 to m - 1 do
-                let idx = int Bpoints.[i].X + 200000
-                y.[idx] <- y.[idx] + Complex(1., 0.)
+                let idx = int Bpoints[i].X + 200000
+                y[idx] <- y[idx] + Complex(1., 0.)
 
             let res =
                 (FastFourierTransform.fft x false, FastFourierTransform.fft y false)
@@ -303,10 +303,10 @@ let main _ =
                             
             let desiredBias = (Aline.Bias + Bline.Bias) / (Fraction.CreateNew 2I 1I)
             for i = 0 to n - 1 do
-                let eval = (Fraction.CreateNew Cpoints.[i].X 1I) * Aline.Slope + desiredBias
-                if eval.isInt() && Cpoints.[i].Y = eval.toInt() then
-                    let idx = int Cpoints.[i].X * 2 + 400000
-                    answer <- answer + int64 res.[idx]
+                let eval = (Fraction.CreateNew Cpoints[i].X 1I) * Aline.Slope + desiredBias
+                if eval.isInt() && Cpoints[i].Y = eval.toInt() then
+                    let idx = int Cpoints[i].X * 2 + 400000
+                    answer <- answer + int64 res[idx]
 
     printfn "%d" answer
     0

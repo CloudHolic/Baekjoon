@@ -11,7 +11,7 @@ let main _ =
     let arr = Array.zeroCreate size
 
     for i in 1 .. size do
-        arr.[i - 1] <- stream.ReadLine() |> int
+        arr[i - 1] <- stream.ReadLine() |> int
 
     arr
     |> Array.sort

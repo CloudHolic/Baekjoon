@@ -11,12 +11,12 @@ let main _ =
         let rec check factor cur =
             match cur with
             | c when c > Array.length table - 1 -> ()
-            | _ -> seqs factor |> Seq.iter (fun x -> if x <= m then table.[x] <- false)
+            | _ -> seqs factor |> Seq.iter (fun x -> if x <= m then table[x] <- false)
 
-        table.[1] <- false
-        table |> Array.iteri (fun i _ -> if i > 2 && i % 2 = 0 then table.[i] <- false)
+        table[1] <- false
+        table |> Array.iteri (fun i _ -> if i > 2 && i % 2 = 0 then table[i] <- false)
         [3..2..limit] |> List.iter (fun x ->
-            match table.[x] with
+            match table[x] with
             | true -> check x <| x + x
             | _ -> ())
             
@@ -29,5 +29,5 @@ let main _ =
         printf "%s" <| result.ToString()
         
     let line = Array.map int <| Console.ReadLine().Split()
-    primeList line.[0] line.[1]    
+    primeList line[0] line[1]    
     0

@@ -21,8 +21,8 @@ let main _ =
         for j in 1 .. len2 do
             for k in 1 .. len3 do
                 match (i, j, k) with
-                | (a, b, c) when equal3 str1.[a - 1] str2.[b - 1] str3.[c - 1] -> cache.[a, b, c] <- cache.[a - 1, b - 1, c - 1] + 1
-                | _ -> cache.[i, j, k] <- max3 <||| (cache.[i - 1, j, k], cache.[i, j - 1, k], cache.[i, j, k - 1])
+                | (a, b, c) when equal3 str1[a - 1] str2[b - 1] str3[c - 1] -> cache[a, b, c] <- cache[a - 1, b - 1, c - 1] + 1
+                | _ -> cache[i, j, k] <- max3 <||| (cache[i - 1, j, k], cache[i, j - 1, k], cache[i, j, k - 1])
 
-    printfn "%d" cache.[len1, len2, len3]
+    printfn "%d" cache[len1, len2, len3]
     0

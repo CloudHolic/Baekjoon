@@ -23,11 +23,11 @@ module FastFourierTransform =
                 for i in 0 .. ln .. n - 1 do
                     let mutable w = Complex(1., 0.)
                     for j = 0 to ln / 2 - 1 do
-                        let u = result.[i + j]
-                        let v = result.[i + j + ln / 2] * w
+                        let u = result[i + j]
+                        let v = result[i + j + ln / 2] * w
 
-                        result.[i + j] <- u + v
-                        result.[i + j + ln / 2] <- u - v
+                        result[i + j] <- u + v
+                        result[i + j + ln / 2] <- u - v
 
                         w <- w * roots
 
@@ -42,9 +42,9 @@ module FastFourierTransform =
             j <- j + bit
 
             if i < j then
-                let temp = result.[i]
-                result.[i] <- result.[j]
-                result.[j] <- temp
+                let temp = result[i]
+                result[i] <- result[j]
+                result[j] <- temp
 
         loop 2 invert
         if invert then result |> Array.map (fun i -> i / Complex(float n, 0.)) else result
@@ -60,11 +60,11 @@ let main _ =
 
         let mutable m = 1
         while 2 * m + 1 <= nmax do
-           if sieve.[m] then
+           if sieve[m] then
                let n = 2 * m + 1
                if n <= upper then 
                    let mutable i = m
-                   while 2 * i < nmax do sieve.[i] <- false; i <- i + n
+                   while 2 * i < nmax do sieve[i] <- false; i <- i + n
                result.Add n
            m <- m + 1
     
@@ -78,8 +78,8 @@ let main _ =
     let y : Complex array = Array.zeroCreate 2097152
     
     for i in getPrimes 1000000 do
-        x.[i] <- Complex(1., 0.)
-        if i < 500000 then y.[2 * i] <- Complex(1., 0.)
+        x[i] <- Complex(1., 0.)
+        if i < 500000 then y[2 * i] <- Complex(1., 0.)
 
     let res = 
         (FastFourierTransform.fft x false, FastFourierTransform.fft y false)
@@ -88,7 +88,7 @@ let main _ =
         
     for _ = 1 to t do
         let cur = stream.ReadLine() |> int
-        result.AppendFormat("{0}\n", res.[cur]) |> ignore
+        result.AppendFormat("{0}\n", res[cur]) |> ignore
 
     printfn "%A" result
     0

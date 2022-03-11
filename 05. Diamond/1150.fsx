@@ -138,17 +138,17 @@ let main _ =
     use stream = new StreamReader(Console.OpenStandardInput())
     let mutable result = 0
 
-    let n, k = stream.ReadLine().Trim().Split() |> Array.map int |> function | nums -> nums.[0], nums.[1]
+    let n, k = stream.ReadLine().Trim().Split() |> Array.map int |> function | nums -> nums[0], nums[1]
     let mutable pq = PriorityQueue.empty<Point> false
     let points = Array.create (n + 2) { Length = 0; Left = 0; Right = 0}
         
     let mutable prev = stream.ReadLine().Trim() |> int
     for i = 1 to n - 1 do
         let temp = stream.ReadLine().Trim() |> int
-        points.[i] <- { Length = temp - prev; Left = i - 1; Right = i + 1 }
+        points[i] <- { Length = temp - prev; Left = i - 1; Right = i + 1 }
         pq <- PriorityQueue.push pq { Length = temp - prev; Left = i; Right = i + 1 }
         prev <- temp
-    points.[n] <- { Length = 0; Left = n - 1; Right = n + 1 }
+    points[n] <- { Length = 0; Left = n - 1; Right = n + 1 }
 
     let mutable i = 0
     while i < k do
@@ -156,19 +156,19 @@ let main _ =
         |> function
             | p, q ->
                 pq <- q
-                if p.Left >= 1 && p.Right <= n && p.Right = points.[p.Left].Right && p.Left = points.[p.Right].Left then
+                if p.Left >= 1 && p.Right <= n && p.Right = points[p.Left].Right && p.Left = points[p.Right].Left then
                     result <- result + p.Length
                     i <- i + 1
                     if i < k then
-                        let newLeft = points.[p.Left].Left
-                        let newRight = points.[p.Right].Right
-                        let newLength = points.[newLeft].Length + points.[p.Right].Length - p.Length
+                        let newLeft = points[p.Left].Left
+                        let newRight = points[p.Right].Right
+                        let newLength = points[newLeft].Length + points[p.Right].Length - p.Length
 
                         pq <- PriorityQueue.push pq { Length = newLength; Left = newLeft; Right = newRight }
 
-                        points.[newLeft].Length <- newLength
-                        points.[newLeft].Right <- newRight
-                        points.[newRight].Left <- newLeft
+                        points[newLeft].Length <- newLength
+                        points[newLeft].Right <- newRight
+                        points[newRight].Left <- newLeft
         
     printfn "%d" result
     0

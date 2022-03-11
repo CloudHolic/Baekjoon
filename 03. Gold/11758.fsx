@@ -12,7 +12,7 @@ let main _ =
     let vec1 = makeVec second first
     let vec2 = makeVec third second
     
-    let ccw = vec1.[0] * vec2.[1] - vec1.[1] * vec2.[0]
+    let ccw = vec1[0] * vec2[1] - vec1[1] * vec2[0]
     match ccw with
     | c when c < 0 -> printfn "-1"
     | c when c > 0 -> printfn "1"

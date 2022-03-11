@@ -8,19 +8,19 @@ let main _ =
     let rec binSearch target arr idx =
         match Array.length arr with
         | 1 ->
-            match sign <| compare target arr.[0] with
+            match sign <| compare target arr[0] with
             | -1 -> idx
             | _ -> idx + 1
         | 2 ->
-            match (target, arr.[0], arr.[1]) with
+            match (target, arr[0], arr[1]) with
             | (a, b, _) when a < b -> idx
             | (a, b, c) when a > b && a < c -> idx + 1
             | _ -> idx + 2
         | i ->
             let middle = i / 2
-            match sign <| compare target arr.[middle] with
-            | -1 -> binSearch target arr.[.. middle - 1] idx
-            | _ -> binSearch target arr.[middle + 1 ..] (idx + middle + 1)
+            match sign <| compare target arr[middle] with
+            | -1 -> binSearch target arr[.. middle - 1] idx
+            | _ -> binSearch target arr[middle + 1 ..] (idx + middle + 1)
 
     let lis lst =
         let size = Array.length lst
@@ -29,20 +29,20 @@ let main _ =
 
         for i in 0 .. (size - 1) do
             match maxLength with
-            | k when k = 0 || cache.[k - 1] < lst.[i] ->
-                cache.[k] <- lst.[i]
+            | k when k = 0 || cache[k - 1] < lst[i] ->
+                cache[k] <- lst[i]
                 maxLength <- maxLength + 1
             | _ ->                
-                let idx = binSearch lst.[i] cache.[0 .. maxLength - 1] 0
-                cache.[idx] <- lst.[i]
+                let idx = binSearch lst[i] cache[0 .. maxLength - 1] 0
+                cache[idx] <- lst[i]
         maxLength
 
     let makeInverse arr =
         let res = Array.create (Array.length arr + 1) 0
-        arr |> Array.iteri (fun i x -> res.[x] <- i + 1)
+        arr |> Array.iteri (fun i x -> res[x] <- i + 1)
         res
 
-    let applyInverse (arr: int[]) (ref: int[]) = Array.mapi (fun i _ -> ref.[arr.[i]]) arr
+    let applyInverse (arr: int[]) (ref: int[]) = Array.mapi (fun i _ -> ref[arr[i]]) arr
 
     use stream = new StreamReader(Console.OpenStandardInput())
     stream.ReadLine() |> ignore

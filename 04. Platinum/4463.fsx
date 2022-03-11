@@ -41,17 +41,17 @@ let main _ =
         | _ ->
             let range = origin.Trim().Split() |> makeRange
             match range with
-            | _ when range.[0] >= range.[1] -> ()
+            | _ when range[0] >= range[1] -> ()
             | _ ->
-                result.Append("Range " + range.[0].ToString() + " to " + range.[1].ToString() + ":\n") |> ignore
-                let count = fibArray |> Array.filter (fun x -> fst x >= range.[0] && fst x <= range.[1]) |> Array.length
+                result.Append("Range " + range[0].ToString() + " to " + range[1].ToString() + ":\n") |> ignore
+                let count = fibArray |> Array.filter (fun x -> fst x >= range[0] && fst x <= range[1]) |> Array.length
                 match count with
                 | 0 -> result.Append "No Fibonacci numbers in the range\n" |> ignore
                 | _ ->
                     fibArray
                     |> Array.iteri (fun i x ->
                         match fst x with
-                        | n when n < range.[0] || n > range.[1] -> ()
+                        | n when n < range[0] || n > range[1] -> ()
                         | _ ->
                             result.Append("Fib(" + i.ToString() + ") = " + (fst x).ToString() + ", ")
                                 .Append(if fst x = 0L then "lg does not exist\n" else "lg is " + (Math.Round(Math.Log2(fst x |> float), 6, MidpointRounding.AwayFromZero).ToString("F6") + "\n"))

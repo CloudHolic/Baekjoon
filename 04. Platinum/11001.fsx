@@ -6,14 +6,14 @@ let main _ =
     use stream = new StreamReader(Console.OpenStandardInput())
     let mutable result = 0L
 
-    let n, d = stream.ReadLine().Trim().Split() |> Array.map int64 |> function | nums -> nums.[0], nums.[1]
+    let n, d = stream.ReadLine().Trim().Split() |> Array.map int64 |> function | nums -> nums[0], nums[1]
     let t = stream.ReadLine().Trim().Split() |> Array.map int64
     let v = stream.ReadLine().Trim().Split() |> Array.map int64
 
-    let temperature = Array.init (int n + 1) (fun x -> if x = 0 then 0L else t.[x - 1])
-    let value = Array.init (int n + 1) (fun x -> if x = 0 then 0L else v.[x - 1])
+    let temperature = Array.init (int n + 1) (fun x -> if x = 0 then 0L else t[x - 1])
+    let value = Array.init (int n + 1) (fun x -> if x = 0 then 0L else v[x - 1])
 
-    let relation i j = (j - i) * temperature.[int j] + value.[int i]
+    let relation i j = (j - i) * temperature[int j] + value[int i]
 
     let rec solve s e l r =
         if s <= e then
