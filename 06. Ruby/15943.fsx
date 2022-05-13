@@ -3,7 +3,10 @@ open System.IO
 
 [<EntryPoint>]
 let main _ =
-    let Mod = 1000000007L
+    let subtract x =        
+        let Mod = 1000000007L
+        if x > Mod then x - Mod else x
+
     use stream = new StreamReader(Console.OpenStandardInput())
     let sStr = stream.ReadLine().Trim()
     let n = stream.ReadLine().Trim() |> int
@@ -20,12 +23,13 @@ let main _ =
             temp)
         |> Seq.toArray
         |> fun x -> Array.append [|0|] x
+        
     let nextIdx = 
         let nextArr = sumArr |> Array.mapi (fun i _ -> Array.FindIndex(sumArr, i + 1, fun x -> x < sumArr[i] - 1) - 1)
         Array.init (sStr.Length + 1) (fun x -> if x = 0 then -1 else Array.FindLastIndex(nextArr, x - 1, fun y -> y = x))
 
     let prevIdx =
-        let prevArr = sumArr |> Array.mapi (fun i _ -> if i > 1 then Array.FindLastIndex(sumArr, i - 1, fun x -> x > sumArr[i]) else -1)
+        let prevArr = sumArr |> Array.mapi (fun i _ -> if i > 0 then Array.FindLastIndex(sumArr, i - 1, fun x -> x > sumArr[i]) else -1)
         Array.init (sStr.Length + 1) (fun x -> if x = 0 then -1 else Array.FindIndex(prevArr, x + 1, fun y -> y = x))
 
     // DP
@@ -37,16 +41,13 @@ let main _ =
         | _ -> ())
 
     for i = 2 to n do
-        for j = 1 to sStr.Length do
-            if nextIdx[j] > -1 then
-                cache[i, nextIdx[j]] <- cache[i, nextIdx[j]] + cache[i - 1, j]
-                if cache[i, nextIdx[j]] > Mod then
-                    cache[i, nextIdx[j]] <- cache[i, nextIdx[j]] - Mod
+        for j = 0 to sStr.Length do
+            let prev, next = prevIdx[j], nextIdx[j]
+            if next < 0 then () 
+            else cache[i, next] <- cache[i, next] + cache[i - 1, j] |> subtract
 
-            if prevIdx[j] > -1 then
-                cache[i, prevIdx[j]] <- cache[i, prevIdx[j]] + cache[i - 1, j]
-                if cache[i, prevIdx[j]] > Mod then
-                    cache[i, prevIdx[j]] <- cache[i, prevIdx[j]] - Mod
+            if prev < 0 then ()
+            else cache[i, prev] <- cache[i, prev] + cache[i - 1, j] |> subtract
 
     cache[n, size]
     |> printfn "%d"
