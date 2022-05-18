@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -8,7 +10,7 @@ void algorithm_1(int g, size_t size, vector<int>& num, int type, vector<int>& x,
 void algorithm_2(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_3(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_4(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
-void algorithm_5(int g, size_t size, vector<int>& num, vector<int>& x, vector<int>& y, vector<int>& z);
+void algorithm_5(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_6(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 
 int change(const char c)
@@ -35,7 +37,7 @@ char reverse_change(const int i)
 	return 0;
 }
 
-inline int det (const int mod, int n)
+inline int det(const int mod, int n)
 {
 	while (n < 0 || n >= mod)
 	{
@@ -49,14 +51,14 @@ inline int det (const int mod, int n)
 }
 
 pair<int, int> get_type(const int g, const size_t len, const vector<int>& num)
-{	
+{
 	const size_t m = len / 2;
 	pair<int, int> result;
 
 	// Small numbers
 	if (len < 5)
 		return { 4, 0 };
-	
+
 	// Type A
 	if (num[1] > 2)
 	{
@@ -81,7 +83,7 @@ pair<int, int> get_type(const int g, const size_t len, const vector<int>& num)
 	}
 
 	// Type B
-	else if (num[0] == 1 && num[1] <= 2)
+	if (num[0] == 1 && num[1] <= 2)
 	{
 		if (num[2] >= 4 && det(g, num[len - 1] - num[2]) != 0)
 			result = { 2, 1 };
@@ -115,7 +117,7 @@ pair<int, int> get_type(const int g, const size_t len, const vector<int>& num)
 		even = len >= 7 && len % 2 == 0;
 
 	if (even && special)
-		result = { 3, 0 };
+		result = { 3, result.second };
 
 	return result;
 }
@@ -125,7 +127,7 @@ tuple<int, int, int> get_init(const pair<int, int> type, const int g, const size
 	const auto [fst, snd] = type;
 	if (fst == 1)
 	{
-		switch(snd)
+		switch (snd)
 		{
 		case 1:
 			return { num[0], num[1] - 1, det(g, num[len - 1] - num[0] - num[1] + 1) };
@@ -145,7 +147,7 @@ tuple<int, int, int> get_init(const pair<int, int> type, const int g, const size
 	}
 	if (fst == 2)
 	{
-		switch(snd)
+		switch (snd)
 		{
 		case 1:
 			return { num[1], num[2] - 1, det(g, num[len - 1] - num[2]) };
@@ -254,7 +256,7 @@ void algorithm_2(const int g, const size_t size, vector<int>& num, const int typ
 			else if (z[m - 2] != 0)
 			{
 				y[m - 2] = y[m - 1] = y[m] = 1;
-				z[m - 2] += 1; z[m - 1] += 1;
+				z[m - 2] -= 1; z[m - 1] -= 1;
 			}
 			else
 			{
@@ -262,7 +264,7 @@ void algorithm_2(const int g, const size_t size, vector<int>& num, const int typ
 				x[m - 1] = x[m] = 1;
 				y[m - 2] = y[m] = g - 1;
 				y[m - 1] = g - 4;
-				z[m - 4] = z[m + 1] = 0;
+				//z[m - 4] = z[m + 1] = 0;
 				z[m - 2] = z[m - 1] = 2;
 			}
 		}
@@ -392,9 +394,9 @@ void algorithm_4(const int g, const size_t size, vector<int>& num, const int typ
 				y[m - 3] -= 1; y[m] -= 1;
 				y[m - 2] -= 2; y[m - 1] -= 2;
 				z[m - 3] = z[m - 1] = 0;
-				z[m - 2] = g - 3;
+				z[m - 2] = 3;
 			}
-			else if(y[m - 2] == 1)
+			else if (y[m - 2] == 1)
 			{
 				x[m - 1] = x[m] = 1;
 				y[m - 3] -= 1; y[m] -= 1;
@@ -613,18 +615,19 @@ void algorithm_4(const int g, const size_t size, vector<int>& num, const int typ
 			}
 		}
 	}
-	else if(x[m - 1] == 1 && c == 2)
+	else if (x[m - 1] == 1 && c == 2)
 	{
 		y[m - 2] -= 1; y[m - 1] -= 1;
 		z[m - 2] = 0;
 	}
 }
 
-void algorithm_5(const int g, size_t size, vector<int>& num, vector<int>& x, vector<int>& y, vector<int>& z)
+void algorithm_5(const int g, size_t size, vector<int>& num, const int type, vector<int>& x, vector<int>& y, vector<int>& z)
 {
 	size_t m = size / 2;
 	int n = 0;
 
+	vector prev_num = vector<int>(num);
 	auto subtract = [&]
 	{
 		num[size - m] -= 1;
@@ -646,12 +649,12 @@ void algorithm_5(const int g, size_t size, vector<int>& num, vector<int>& x, vec
 		}
 		n++;
 	};
-
+	
 	subtract();
 	if (num[size - m - 1] == 0 || num[size - m] == 0)
 		subtract();
-	
-	if (num[0] == 1 && num[1] == 0 && num[2] == 3)
+
+	if (prev_num[0] == 1 && prev_num[1] == 0 && prev_num[2] == 4 && num[0] == 1 && num[1] == 0 && num[2] == 3)
 	{
 		const int type = det(g, num[size - 1] - num[2]) == 0 ? 2 : 1;
 		algorithm_4(g, size, num, type, x, y, z);
@@ -827,7 +830,7 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 				{
 					a.resize(4); b.resize(3); c.resize(2);
 					a[0] = a[3] = number[0] - 1;
-					a[1] = a[2] = g - 1;
+					a[1] = a[2] = g - 2;
 					b[0] = b[2] = 1;
 					b[1] = 3;
 					c[0] = c[1] = remain[1];
@@ -915,7 +918,7 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 				}
 				else
 				{
-					if(const size_t remain_len = remain.size(); remain_len == 3 && remain[0] == 2 && remain[1] == 0 && remain[2] == 1)
+					if (const size_t remain_len = remain.size(); remain_len == 3 && remain[0] == 2 && remain[1] == 0 && remain[2] == 1)
 					{
 						a.resize(5); b.resize(3); c.resize(1);
 						a[0] = a[2] = a[4] = 1;
@@ -960,8 +963,41 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 			}
 		}
 		else
-			// Use algorithm 1.
-			algorithm_1(g, 5, number, type, a, b, c);		
+		{
+			// Use algorithm 1, with different adjustment.
+			a.resize(5); b.resize(4); c.resize(3);
+
+			// Init value
+			auto [x0, y0, z0] = get_init({ 1, type }, g, 5, number);
+			a[0] = a[4] = x0;
+			b[0] = b[3] = y0;
+			c[0] = c[2] = z0;
+			int r = (a[0] + b[0] + c[0]) / g;
+
+			// Temporary solution
+			a[1] = a[3] = det(g, number[1] - b[0] - (c[0] >= number[2] ? 1 : 0));
+			b[1] = b[2] = det(g, number[2] - c[0] - 1);
+			c[1] = det(g, number[3] - a[1] - b[1] - r);
+			r = (a[1] + b[1] + c[1] + r - number[3]) / g;
+
+			// Adjustment step
+			if (r == 0)
+				a[2] = 1;
+			else if (r == 2)
+			{
+				if (c[1] == g - 1)
+				{
+					a[2] = 1;
+					b[1] -= 1; b[2] -= 1;
+					c[1] = 0;
+				}
+				else
+				{
+					b[1] -= 1; b[2] -= 1;
+					c[1] += 1;
+				}
+			}
+		}
 	};
 
 	auto digit_6 = [g, type, &digit_2, &digit_3](vector<int>& number, vector<int>& a, vector<int>& b, vector<int>& c)
@@ -1009,12 +1045,12 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 				a[2] = temp / 2;
 				b[2] = temp - a[2];
 			}
-			else if (det(g, number[5] - number[1]+ 2) == 0 && number[3] == 0)
+			else if (det(g, number[5] - number[1] + 2) == 0 && number[3] == 0)
 			{
 				if (number[1] < 2)
 				{
 					a.resize(5); b.resize(5); c.resize(4);
-					a[0] = a[4] = g - 2 - number[1];
+					a[0] = a[4] = g - 2 + number[1];
 					b[0] = b[4] = 1;
 					c[0] = c[3] = g - 1;
 
@@ -1103,7 +1139,7 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 							break;
 						}
 					}
-					
+
 					const int c1 = (3 + y1 + det(g, number[4] - 3 - y1) - number[4]) / g;
 					int c2 = (x1 + det(g, number[3] - x1 - 1 - c1 + u) + c1 + 1 - number[3]) / g;
 					if (c2 == 2)
@@ -1158,7 +1194,7 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 						a[2] = 1;
 						b[0] = b[3] = g - 1;
 						b[1] = b[2] = g - 2;
-						c[0] = c[2] = 1;						
+						c[0] = c[2] = 1;
 					}
 				}
 				else if (number[1] == 1)
@@ -1166,15 +1202,18 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 					if (number[3] > 1 || (number[3] == 1 && number[4] > 1))
 					{
 						vector remain = { number[3], number[4] - 1, number[5] - 1 };
-						if (remain[2] < 0)
+						for (int i = 2; i > 0; i--)
 						{
-							remain[1] -= 1;
-							remain[2] += g;
+							if (remain[i] < 0)
+							{
+								remain[i - 1] -= 1;
+								remain[i] += g;
+							}
 						}
 
-						digit_2(remain, b, c, a);
+						digit_3(remain, b, c, a);
 						a.resize(6);
-						a[0] = a[1] = a[4] = a[5] = 1;						
+						a[0] = a[1] = a[4] = a[5] = 1;
 					}
 					else if (number[3] == 1 && number[4] == 0)
 					{
@@ -1217,15 +1256,19 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 					if (number[3] > 1 || (number[3] == 1 && number[4] > 1))
 					{
 						vector remain = { number[3], number[4] - 2, number[5] - 1 };
-						if (remain[2] < 0)
+						for (int i = 2; i > 0; i--)
 						{
-							remain[1] -= 1;
-							remain[2] += g;
+							if (remain[i] < 0)
+							{
+								remain[i - 1] -= 1;
+								remain[i] += g;
+							}
 						}
 
-						digit_2(remain, b, c, a);
+						digit_3(remain, b, c, a);
 						a.resize(6);
-						a[0] = a[1] = a[4] = a[5] = 1;
+						a[0] = a[5] = 1;
+						a[1] = a[4] = 2;
 					}
 					else if (number[3] == 1 && number[4] == 0)
 					{
@@ -1296,7 +1339,7 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 
 					const int c1 = (2 + y1 + det(g, number[4] - 1 - y1) - number[4]) / g;
 					const int c2 = (g - y1 - 1 + det(g, number[3] + y1 + 2) + g - 1 - number[3]) / g;
-					
+
 					a.resize(6); b.resize(5); c.resize(3);
 					a[0] = a[5] = 1;
 					a[2] = a[3] = g - y1 - 1 - c1;
@@ -1304,7 +1347,7 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 					b[1] = b[3] = y1 - c2 + 1 + c1;
 					b[2] = det(g, number[3] + y1 + 2);
 					c[0] = c[2] = g - 1;
-					c[1] = det(g, number[4] - 1 - y1) + (c2 - 1) - c1;					
+					c[1] = det(g, number[4] - 1 - y1) + (c2 - 1) - c1;
 				}
 				else if (number[1] >= 4)
 				{
@@ -1370,7 +1413,7 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 					else if (c[1] != 0)
 					{
 						b[1] = b[2] = b[3] = 1;
-						c[1] += 1; c[2] += 1;
+						c[1] -= 1; c[2] -= 1;
 					}
 					else
 					{
@@ -1425,11 +1468,11 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 				b[1] -= 1; b[3] -= 1;
 				b[2] = g - 2;
 				c[1] = c[2] = 0;
-			}			
+			}
 		}
 	};
 
-	switch(size)
+	switch (size)
 	{
 	case 1:
 		digit_1(num, x, y, z);
@@ -1454,12 +1497,8 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 	}
 }
 
-void solve()
+void solve(int g, string n)
 {
-	int g;
-	string n;
-	cin >> g >> n;
-
 	const size_t size = n.length();
 
 	vector<int> num(size), x, y, z;
@@ -1469,7 +1508,7 @@ void solve()
 	if (const auto [fst, snd] = get_type(g, size, num); fst == 1)
 	{
 		const size_t m = size / 2;
-		const bool flag = num[size - m - 1] != 0 && num[size - m - 2] != 0;
+		const bool flag = num[size - m - 1] != 0 && num[size - m] != 0;
 		if (size % 2 == 1)
 		{
 			if (snd >= 1 && snd <= 4)
@@ -1490,20 +1529,28 @@ void solve()
 	else if (fst == 2 && size % 2 == 0)
 		algorithm_4(g, size, num, snd, x, y, z);
 	else if (fst == 3)	// special numbers
-		algorithm_5(g, size, num, x, y, z);
+		algorithm_5(g, size, num, snd, x, y, z);
 	else if (fst == 4)	// small numbers
 		algorithm_6(g, size, num, snd, x, y, z);
 
-	// Print x, y, z
+	ostringstream out;
 	for (const auto& ch : x)
-		cout << reverse_change(ch);
-	cout << " ";
+		out << reverse_change(ch);
+	int p1 = stoi(out.str());
+
+	out.str("");
 	for (const auto& ch : y)
-		cout << reverse_change(ch);
-	cout << " ";
+		out << reverse_change(ch);
+	int p2 = stoi(out.str());
+
+	out.str("");
 	for (const auto& ch : z)
-		cout << reverse_change(ch);
-	cout << "\n";
+		out << reverse_change(ch);
+	int p3 = stoi(out.str());
+
+	int answer = stoi(n);
+	if (answer != p1 + p2 + p3)
+		cout << answer << " = " << p1 << " + " << p2 << " + " << p3 << " is false\n";
 }
 
 int main()
@@ -1511,11 +1558,8 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(nullptr);
 
-	int t;
-	cin >> t;
-
-	while(t--)	
-		solve();	
+	for(int i = 1; i < 20000000; i++)
+		solve(10, to_string(i));
 
 	return 0;
 }
