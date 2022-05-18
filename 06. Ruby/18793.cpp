@@ -4,6 +4,13 @@
 
 using namespace std;
 
+void algorithm_1(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
+void algorithm_2(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
+void algorithm_3(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
+void algorithm_4(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
+void algorithm_5(int g, size_t size, vector<int>& num, vector<int>& x, vector<int>& y, vector<int>& z);
+void algorithm_6(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
+
 int change(const char c)
 {
 	if (c >= '0' && c <= '9')
@@ -653,8 +660,10 @@ void algorithm_5(const int g, size_t size, vector<int>& num, vector<int>& x, vec
 	{
 		if (const auto [fst, snd] = get_type(g, size, num); fst == 1)
 			algorithm_2(g, size, num, snd, x, y, z);
-		else
+		else if (fst == 2)
 			algorithm_4(g, size, num, snd, x, y, z);
+		else if (fst == 4)
+			algorithm_6(g, size, num, snd, x, y, z);
 	}
 
 	const size_t p1 = x.size();
@@ -740,13 +749,14 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 			}
 			else if (number[0] == 1)
 			{
+				a.resize(2);
 				a[0] = a[1] = g - 1;
 				b[0] = 1;
 			}
 		}
 	};
 
-	auto digit_4 = [g, &digit_2, &digit_3](const vector<int>& number, vector<int>& a, vector<int>& b, vector<int>& c)
+	auto digit_4 = [g, &digit_1, &digit_2, &digit_3](const vector<int>& number, vector<int>& a, vector<int>& b, vector<int>& c)
 	{
 		if (number[0] == 1 && number[1] == 0 && number[2] == 0 && number[3] == 0)
 		{
@@ -825,9 +835,11 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 			}
 			else
 			{
-				if (remain_len == 2)
+				if (remain_len == 1)
+					digit_1(remain, b, c, a);
+				else if (remain_len == 2)
 					digit_2(remain, b, c, a);
-				else // if (remain_len == 3)
+				else if (remain_len == 3)
 					digit_3(remain, b, c, a);
 
 				a.resize(4);
@@ -837,7 +849,7 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 		}
 	};
 
-	auto digit_5 = [g, type, &digit_2, &digit_3](vector<int>& number, vector<int>& a, vector<int>& b, vector<int>& c)
+	auto digit_5 = [g, type, &digit_1, &digit_2, &digit_3](vector<int>& number, vector<int>& a, vector<int>& b, vector<int>& c)
 	{
 		if (number[0] == 1)
 		{
@@ -932,9 +944,11 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 					}
 					else
 					{
-						if (remain_len == 2)
+						if (remain_len == 1)
+							digit_1(remain, b, c, a);
+						else if (remain_len == 2)
 							digit_2(remain, b, c, a);
-						else // if (remain_len == 3)
+						else if (remain_len == 3)
 							digit_3(remain, b, c, a);
 
 						a.resize(5);
