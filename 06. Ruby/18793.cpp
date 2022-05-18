@@ -1,6 +1,6 @@
 #include <iostream>
-#include <vector>
 #include <tuple>
+#include <vector>
 
 using namespace std;
 
@@ -1149,7 +1149,7 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 				}
 				else if (number[1] == 1)
 				{
-					if (number[3] > 1 || number[3] == 1 && number[4] > 1)
+					if (number[3] > 1 || (number[3] == 1 && number[4] > 1))
 					{
 						vector remain = { number[3], number[4] - 1, number[5] - 1 };
 						if (remain[2] < 0)
@@ -1200,7 +1200,7 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 				}
 				else if (number[1] == 2)
 				{
-					if (number[3] > 1 || number[3] == 1 && number[4] > 1)
+					if (number[3] > 1 || (number[3] == 1 && number[4] > 1))
 					{
 						vector remain = { number[3], number[4] - 2, number[5] - 1 };
 						if (remain[2] < 0)
