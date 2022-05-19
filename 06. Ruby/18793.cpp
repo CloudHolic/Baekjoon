@@ -1666,9 +1666,10 @@ int main()
 		return result;
 	};
 
-	for (int64 i = 1; ; i++)
+	constexpr int to = 60;
+	const int64 start = static_cast<int64>(pow(to, 7)) + static_cast<int64>(pow(to, 5));
+	for (int64 i = start; ; i++)
 	{
-		constexpr int to = 15;
 		string problem = change_notation(to_string(i), 10, to);
 		if (problem.size() > 8 && problem[0] == '2')
 			break;
