@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -6,11 +7,13 @@
 
 using namespace std;
 
+typedef long long int64;
+
 void algorithm_1(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_2(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_3(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_4(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
-void algorithm_5(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
+void algorithm_5(int g, size_t size, vector<int>& num, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_6(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 
 int change(const char c)
@@ -50,7 +53,7 @@ inline int det(const int mod, int n)
 	return n;
 }
 
-pair<int, int> get_type(const int g, const size_t len, const vector<int>& num)
+pair<int, int> get_type(const int g, const size_t len, const vector<int>& num, bool skip_special = false)
 {
 	const size_t m = len / 2;
 	pair<int, int> result;
@@ -116,7 +119,7 @@ pair<int, int> get_type(const int g, const size_t len, const vector<int>& num)
 	else
 		even = len >= 7 && len % 2 == 0;
 
-	if (even && special)
+	if (!skip_special && even && special)
 		result = { 3, result.second };
 
 	return result;
@@ -622,12 +625,12 @@ void algorithm_4(const int g, const size_t size, vector<int>& num, const int typ
 	}
 }
 
-void algorithm_5(const int g, size_t size, vector<int>& num, const int type, vector<int>& x, vector<int>& y, vector<int>& z)
+void algorithm_5(const int g, size_t size, vector<int>& num, vector<int>& x, vector<int>& y, vector<int>& z)
 {
 	size_t m = size / 2;
 	int n = 0;
 
-	vector prev_num = vector<int>(num);
+	auto prev_num = vector(num);
 	auto subtract = [&]
 	{
 		num[size - m] -= 1;
@@ -649,7 +652,7 @@ void algorithm_5(const int g, size_t size, vector<int>& num, const int type, vec
 		}
 		n++;
 	};
-	
+
 	subtract();
 	if (num[size - m - 1] == 0 || num[size - m] == 0)
 		subtract();
@@ -662,7 +665,67 @@ void algorithm_5(const int g, size_t size, vector<int>& num, const int type, vec
 	else
 	{
 		if (const auto [fst, snd] = get_type(g, size, num); fst == 1)
-			algorithm_2(g, size, num, snd, x, y, z);
+		{
+			if ((size % 2 == 0 && snd >= 1 && snd <= 4) || (size % 2 == 1 && snd >= 5 && snd <= 6))
+				algorithm_2(g, size, num, snd, x, y, z);
+			else
+			{
+				if (const auto [org_fst, org_snd] = get_type(g, size, prev_num, true); org_fst == 1)
+				{
+					if (org_snd >= 1 && org_snd <= 4)
+						algorithm_2(g, size, prev_num, org_snd, x, y, z);
+					else
+						algorithm_1(g, size, prev_num, org_snd, x, y, z);
+				}
+				else
+					algorithm_4(g, size, prev_num, org_snd, x, y, z);
+
+				if (const int c1 = (x[0] + y[0] + z[0] - prev_num[size - 1]) / g;
+					*ranges::min_element(y) < 0 || det(g, x[1] + y[1] + z[1] + c1 - prev_num[size - 2]) != 0)
+				{
+					num[size - m - 1] += n;
+					for (int i = static_cast<int>(size - m - 1); i > 0; i--)
+					{
+						if (num[i] >= g)
+						{
+							num[i - 1] += 1;
+							num[i] -= g;
+						}
+					}
+
+					if (num[0] >= g)
+					{
+						num[0] -= g;
+						num.insert(num.begin(), 1);
+						size += 1;
+						m = size / 2;
+					}
+
+					x.clear(); y.clear(); z.clear();
+					if (const auto [new_fst, new_snd] = get_type(g, size, num, true); new_fst == 1)
+					{
+						if ((size % 2 == 1 && new_snd >= 1 && new_snd <= 4) || (size % 2 == 0 && new_snd >= 5 && new_snd <= 6))
+							algorithm_1(g, size, num, new_snd, x, y, z);
+					}
+					else if (new_fst == 2)
+					{
+						if (size % 2 == 1)
+							algorithm_3(g, size, num, new_snd, x, y, z);
+						else						
+							algorithm_1(g, size, num, 6, x, y, z);
+					}
+					else if (new_fst == 4)
+						algorithm_6(g, size, num, new_snd, x, y, z);
+
+					const size_t p = x.size();
+					x[p - m] += n;
+
+					return;
+				}
+
+				return;
+			}
+		}
 		else if (fst == 2)
 			algorithm_4(g, size, num, snd, x, y, z);
 		else if (fst == 4)
@@ -1529,27 +1592,51 @@ void solve(int g, string n)
 	else if (fst == 2 && size % 2 == 0)
 		algorithm_4(g, size, num, snd, x, y, z);
 	else if (fst == 3)	// special numbers
-		algorithm_5(g, size, num, snd, x, y, z);
+		algorithm_5(g, size, num, x, y, z);
 	else if (fst == 4)	// small numbers
 		algorithm_6(g, size, num, snd, x, y, z);
+
+	auto change_notation = [](string num, const int64 from, const int64 to)
+	{
+		int64 value = 0, factor = 1;
+		ranges::reverse(num);
+		for (const char i : num)
+		{
+			value += change(i) * factor;
+			factor *= from;
+		}
+
+		string result = "0";
+		if (value == 0)
+			return result;
+
+		result.clear();
+		while (value > 0)
+		{
+			result.push_back(reverse_change(static_cast<int>(value % to)));
+			value = value / to;
+		}
+
+		ranges::reverse(result);
+		return result;
+	};
 
 	ostringstream out;
 	for (const auto& ch : x)
 		out << reverse_change(ch);
-	int p1 = stoi(out.str());
+	const int64 p1 = stoll(change_notation(out.str(), g, 10));
 
 	out.str("");
 	for (const auto& ch : y)
 		out << reverse_change(ch);
-	int p2 = stoi(out.str());
+	const int64 p2 = stoll(change_notation(out.str(), g, 10));
 
 	out.str("");
 	for (const auto& ch : z)
 		out << reverse_change(ch);
-	int p3 = stoi(out.str());
+	const int64 p3 = stoll(change_notation(out.str(), g, 10));
 
-	int answer = stoi(n);
-	if (answer != p1 + p2 + p3)
+	if (const int64 answer = stoll(change_notation(n, g, 10)); answer != p1 + p2 + p3)
 		cout << answer << " = " << p1 << " + " << p2 << " + " << p3 << " is false\n";
 }
 
@@ -1558,8 +1645,35 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(nullptr);
 
-	for(int i = 1; i < 20000000; i++)
-		solve(10, to_string(i));
+	auto change_notation = [](string num, const int64 from, const int64 to)
+	{
+		int64 value = 0, factor = 1;
+		ranges::reverse(num);
+		for (const char i : num)
+		{
+			value += change(i) * factor;
+			factor *= from;
+		}
+
+		string result;
+		while(value > 0)
+		{
+			result.push_back(reverse_change(static_cast<int>(value % to)));
+			value = value / to;
+		}
+
+		ranges::reverse(result);
+		return result;
+	};
+
+	for (int64 i = 1; ; i++)
+	{
+		constexpr int to = 15;
+		string problem = change_notation(to_string(i), 10, to);
+		if (problem.size() > 8 && problem[0] == '2')
+			break;
+		solve(to, problem);
+	}
 
 	return 0;
 }
