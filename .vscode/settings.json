@@ -3,5 +3,6 @@
         "algorithm": "cpp",
         "utility": "cpp",
         "iostream": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }
