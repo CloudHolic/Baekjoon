@@ -1,13 +1,9 @@
 #include <algorithm>
 #include <iostream>
-#include <sstream>
-#include <string>
 #include <tuple>
 #include <vector>
 
 using namespace std;
-
-typedef long long int64;
 
 void algorithm_1(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_2(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
@@ -680,8 +676,19 @@ void algorithm_5(const int g, size_t size, vector<int>& num, vector<int>& x, vec
 				else
 					algorithm_4(g, size, prev_num, org_snd, x, y, z);
 
-				if (const int c1 = (x[0] + y[0] + z[0] - prev_num[size - 1]) / g;
-					*ranges::min_element(y) < 0 || det(g, x[1] + y[1] + z[1] + c1 - prev_num[size - 2]) != 0)
+				bool flag = true;
+				int c = 0;
+				for (size_t i = 0; i < m - 1; i++)
+				{
+					c = (x[i] + y[i] + z[i] + c - prev_num[size - i - 1]) / g;
+					if (c != 0)
+					{
+						flag = false;
+						break;
+					}
+				}
+
+				if (!flag || *ranges::min_element(x) < 0 || *ranges::min_element(y) < 0 || *ranges::min_element(z) < 0)
 				{
 					num[size - m - 1] += n;
 					for (int i = static_cast<int>(size - m - 1); i > 0; i--)
@@ -711,7 +718,7 @@ void algorithm_5(const int g, size_t size, vector<int>& num, vector<int>& x, vec
 					{
 						if (size % 2 == 1)
 							algorithm_3(g, size, num, new_snd, x, y, z);
-						else						
+						else
 							algorithm_1(g, size, num, 6, x, y, z);
 					}
 					else if (new_fst == 4)
@@ -1560,8 +1567,12 @@ void algorithm_6(const int g, const size_t size, vector<int>& num, int type, vec
 	}
 }
 
-void solve(int g, string n)
+void solve()
 {
+	int g;
+	string n;
+	cin >> g >> n;
+
 	const size_t size = n.length();
 
 	vector<int> num(size), x, y, z;
@@ -1596,48 +1607,16 @@ void solve(int g, string n)
 	else if (fst == 4)	// small numbers
 		algorithm_6(g, size, num, snd, x, y, z);
 
-	auto change_notation = [](string num, const int64 from, const int64 to)
-	{
-		int64 value = 0, factor = 1;
-		ranges::reverse(num);
-		for (const char i : num)
-		{
-			value += change(i) * factor;
-			factor *= from;
-		}
-
-		string result = "0";
-		if (value == 0)
-			return result;
-
-		result.clear();
-		while (value > 0)
-		{
-			result.push_back(reverse_change(static_cast<int>(value % to)));
-			value = value / to;
-		}
-
-		ranges::reverse(result);
-		return result;
-	};
-
-	ostringstream out;
+	// Print x, y, z
 	for (const auto& ch : x)
-		out << reverse_change(ch);
-	const int64 p1 = stoll(change_notation(out.str(), g, 10));
-
-	out.str("");
+		cout << reverse_change(ch);
+	cout << " ";
 	for (const auto& ch : y)
-		out << reverse_change(ch);
-	const int64 p2 = stoll(change_notation(out.str(), g, 10));
-
-	out.str("");
+		cout << reverse_change(ch);
+	cout << " ";
 	for (const auto& ch : z)
-		out << reverse_change(ch);
-	const int64 p3 = stoll(change_notation(out.str(), g, 10));
-
-	if (const int64 answer = stoll(change_notation(n, g, 10)); answer != p1 + p2 + p3)
-		cout << answer << " = " << p1 << " + " << p2 << " + " << p3 << " is false\n";
+		cout << reverse_change(ch);
+	cout << "\n";
 }
 
 int main()
@@ -1645,36 +1624,11 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(nullptr);
 
-	auto change_notation = [](string num, const int64 from, const int64 to)
-	{
-		int64 value = 0, factor = 1;
-		ranges::reverse(num);
-		for (const char i : num)
-		{
-			value += change(i) * factor;
-			factor *= from;
-		}
+	int t;
+	cin >> t;
 
-		string result;
-		while(value > 0)
-		{
-			result.push_back(reverse_change(static_cast<int>(value % to)));
-			value = value / to;
-		}
-
-		ranges::reverse(result);
-		return result;
-	};
-
-	constexpr int to = 60;
-	const int64 start = static_cast<int64>(pow(to, 7)) + static_cast<int64>(pow(to, 5));
-	for (int64 i = start; ; i++)
-	{
-		string problem = change_notation(to_string(i), 10, to);
-		if (problem.size() > 8 && problem[0] == '2')
-			break;
-		solve(to, problem);
-	}
+	while (t--)
+		solve();
 
 	return 0;
 }
