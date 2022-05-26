@@ -3,13 +3,16 @@
 #include <tuple>
 #include <vector>
 
+#include <string>
+#include <sstream>
+
 using namespace std;
 
 void algorithm_1(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_2(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_3(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_4(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
-void algorithm_5(int g, size_t size, vector<int>& num, vector<int>& x, vector<int>& y, vector<int>& z);
+//void algorithm_5(int g, size_t size, vector<int>& num, int fst, int snd, vector<int>& x, vector<int>& y, vector<int>& z);
 void algorithm_6(int g, size_t size, vector<int>& num, int type, vector<int>& x, vector<int>& y, vector<int>& z);
 
 int change(const char c)
@@ -49,74 +52,74 @@ inline int det(const int mod, int n)
 	return n;
 }
 
-pair<int, int> get_type(const int g, const size_t len, const vector<int>& num, bool skip_special = false)
+tuple<int, int, bool, bool> get_type(const int g, const size_t len, const vector<int>& num)
 {
-	const size_t m = len / 2;
-	pair<int, int> result;
+	const size_t m = len / 2, last = len - 1;
+	tuple<int, int, bool, bool> result;
 
 	// Small numbers
 	if (len < 5)
-		return { 4, 0 };
+		return { 0, 0, false, true };
 
 	// Type A
 	if (num[1] > 2)
 	{
-		if (det(g, num[len - 1] - num[0] - num[1] + 1) != 0)
-			result = { 1, 1 };
+		if (det(g, num[last] - num[0] - num[1] + 1) != 0)
+			result = { 1, 1, false, false };
 		else
-			result = { 1, 2 };
+			result = { 1, 2, false, false };
 	}
 	else if (num[1] <= 2 && num[0] != 1)
 	{
-		if (det(g, num[len - 1] - num[0] + 2) != 0)
-			result = { 1, 3 };
+		if (det(g, num[last] - num[0] + 2) != 0)
+			result = { 1, 3, false, false };
 		else
-			result = { 1, 4 };
+			result = { 1, 4, false, false };
 	}
 	else if (num[0] == 1 && num[1] == 0)
 	{
-		if (num[2] <= 3 && det(g, num[len - 1] - num[2]) != 0)
-			result = { 1, 5 };
-		if (num[2] <= 2 && det(g, num[len - 1] - num[2]) == 0)
-			result = { 1, 6 };
+		if (num[2] <= 3 && det(g, num[last] - num[2]) != 0)
+			result = { 1, 5, false, false };
+		if (num[2] <= 2 && det(g, num[last] - num[2]) == 0)
+			result = { 1, 6, false, false };
 	}
 
 	// Type B
 	if (num[0] == 1 && num[1] <= 2)
 	{
-		if (num[2] >= 4 && det(g, num[len - 1] - num[2]) != 0)
-			result = { 2, 1 };
-		else if (num[2] >= 3 && det(g, num[len - 1] - num[2]) == 0)
-			result = { 2, 2 };
+		if (num[2] >= 4 && det(g, num[last] - num[2]) != 0)
+			result = { 2, 1, false, false };
+		else if (num[2] >= 3 && det(g, num[last] - num[2]) == 0)
+			result = { 2, 2, false, false };
 		else if (num[1] != 0)
 		{
-			if (num[2] <= 1 && num[len - 1] == 0)
-				result = { 2, 3 };
-			else if (num[2] >= 2 && num[2] <= 3 && num[len - 1] == 0)
-				result = { 2, 4 };
-			else if (num[2] <= 2 && num[len - 1] != 0)
-				result = { 2, 5 };
-			else if (num[2] == 3 && det(g, num[len - 1] - 3) != 0)
-				result = { 2, 6 };
-			else if (num[2] == 3 && num[len - 1] == 3)
-				result = { 2, 7 };
+			if (num[2] <= 1 && num[last] == 0)
+				result = { 2, 3, false, false };
+			else if (num[2] >= 2 && num[2] <= 3 && num[last] == 0)
+				result = { 2, 4, false, false };
+			else if (num[2] <= 2 && num[last] != 0)
+				result = { 2, 5, false, false };
+			else if (num[2] == 3 && det(g, num[last] - 3) != 0)
+				result = { 2, 6, false, false };
+			else if (num[2] == 3 && num[last] == 3)
+				result = { 2, 7, false, false };
 		}
 	}
 
 	if (len == 5 || len == 6)
-		return { 4, result.second };
+		return { get<0>(result), get<1>(result), get<2>(result), true };
 
 	// Special numbers
 	bool even;
-	const bool special = num[len - m - 1] == 0 || num[len - m] == 0;
+	const bool special = num[last - m] == 0 || num[last - m + 1] == 0;
 
-	if (result.first == 1 && (result.second == 5 || result.second == 6))
+	if (get<0>(result) == 1 && (get<1>(result) == 5 || get<1>(result) == 6))
 		even = len >= 7 && len % 2 == 1;
 	else
 		even = len >= 7 && len % 2 == 0;
 
-	if (!skip_special && even && special)
-		result = { 3, result.second };
+	if (even && special)
+		result = { get<0>(result), get<1>(result), true, false };
 
 	return result;
 }
@@ -621,122 +624,56 @@ void algorithm_4(const int g, const size_t size, vector<int>& num, const int typ
 	}
 }
 
-void algorithm_5(const int g, size_t size, vector<int>& num, vector<int>& x, vector<int>& y, vector<int>& z)
+void algorithm_5(const int g, const size_t size, const vector<int>& num, const int fst, const int snd, vector<int>& x, vector<int>& y, vector<int>& z)
 {
-	size_t m = size / 2;
+	auto new_num = vector(num);
+	const size_t m = size / 2;
+	size_t new_size = new_num.size();
 	int n = 0;
 
-	auto prev_num = vector(num);
 	auto subtract = [&]
 	{
-		num[size - m] -= 1;
-		num[size - m - 1] -= 1;
-		for (int i = static_cast<int>(size - m); i > 0; i--)
+		new_num[new_size - m] -= 1;
+		new_num[new_size - m - 1] -= 1;
+		for (int i = static_cast<int>(new_size - m); i > 0; i--)
 		{
-			if (num[i] < 0)
+			if (new_num[i] < 0)
 			{
-				num[i - 1] -= 1;
-				num[i] += g;
+				new_num[i - 1] -= 1;
+				new_num[i] += g;
 			}
 		}
 
-		if (num[0] == 0)
+		if (new_num[0] == 0)
 		{
-			num.erase(num.begin());
-			size -= 1;
-			m = size / 2;
+			new_num.erase(new_num.begin());
+			new_size -= 1;
 		}
+
 		n++;
 	};
 
 	subtract();
-	if (num[size - m - 1] == 0 || num[size - m] == 0)
+	if (new_num[new_size - m - 1] == 0 || new_num[new_size - m] == 0)
 		subtract();
 
-	if (prev_num[0] == 1 && prev_num[1] == 0 && prev_num[2] == 4 && num[0] == 1 && num[1] == 0 && num[2] == 3)
+	const auto [new_fst, new_snd, special, small] = get_type(g, new_size, new_num);
+	const size_t x_size = fst == 1 && (snd == 5 || snd == 6) ? size - 1 : size;
+	const size_t new_x_size = new_fst == 1 && (new_snd == 5 || new_snd == 6) ? new_size - 1 : new_size;
+
+	if (x_size != new_x_size)
 	{
-		const int type = det(g, num[size - 1] - num[2]) == 0 ? 2 : 1;
-		algorithm_4(g, size, num, type, x, y, z);
+		const int type = det(g, new_num[new_size - 1] - new_num[2]) == 0 ? 2 : 1;
+		algorithm_4(g, new_size, new_num, type, x, y, z);
 	}
 	else
 	{
-		if (const auto [fst, snd] = get_type(g, size, num); fst == 1)
-		{
-			if ((size % 2 == 0 && snd >= 1 && snd <= 4) || (size % 2 == 1 && snd >= 5 && snd <= 6))
-				algorithm_2(g, size, num, snd, x, y, z);
-			else
-			{
-				if (const auto [org_fst, org_snd] = get_type(g, size, prev_num, true); org_fst == 1)
-				{
-					if (org_snd >= 1 && org_snd <= 4)
-						algorithm_2(g, size, prev_num, org_snd, x, y, z);
-					else
-						algorithm_1(g, size, prev_num, org_snd, x, y, z);
-				}
-				else
-					algorithm_4(g, size, prev_num, org_snd, x, y, z);
-
-				bool flag = true;
-				int c = 0;
-				for (size_t i = 0; i < m - 1; i++)
-				{
-					c = (x[i] + y[i] + z[i] + c - prev_num[size - i - 1]) / g;
-					if (c != 0)
-					{
-						flag = false;
-						break;
-					}
-				}
-
-				if (!flag || *ranges::min_element(x) < 0 || *ranges::min_element(y) < 0 || *ranges::min_element(z) < 0)
-				{
-					num[size - m - 1] += n;
-					for (int i = static_cast<int>(size - m - 1); i > 0; i--)
-					{
-						if (num[i] >= g)
-						{
-							num[i - 1] += 1;
-							num[i] -= g;
-						}
-					}
-
-					if (num[0] >= g)
-					{
-						num[0] -= g;
-						num.insert(num.begin(), 1);
-						size += 1;
-						m = size / 2;
-					}
-
-					x.clear(); y.clear(); z.clear();
-					if (const auto [new_fst, new_snd] = get_type(g, size, num, true); new_fst == 1)
-					{
-						if ((size % 2 == 1 && new_snd >= 1 && new_snd <= 4) || (size % 2 == 0 && new_snd >= 5 && new_snd <= 6))
-							algorithm_1(g, size, num, new_snd, x, y, z);
-					}
-					else if (new_fst == 2)
-					{
-						if (size % 2 == 1)
-							algorithm_3(g, size, num, new_snd, x, y, z);
-						else
-							algorithm_1(g, size, num, 6, x, y, z);
-					}
-					else if (new_fst == 4)
-						algorithm_6(g, size, num, new_snd, x, y, z);
-
-					const size_t p = x.size();
-					x[p - m] += n;
-
-					return;
-				}
-
-				return;
-			}
-		}
-		else if (fst == 2)
-			algorithm_4(g, size, num, snd, x, y, z);
-		else if (fst == 4)
-			algorithm_6(g, size, num, snd, x, y, z);
+		if (small)
+			algorithm_6(g, new_size, new_num, new_snd, x, y, z);
+		else if (new_fst == 2)
+			algorithm_4(g, new_size, new_num, new_snd, x, y, z);
+		else if (new_fst == 1)		
+			algorithm_2(g, new_size, new_num, new_snd, x, y, z);		
 	}
 
 	const size_t p1 = x.size();
@@ -1579,7 +1516,11 @@ void solve()
 	for (size_t i = 0; i < size; i++)
 		num[i] = change(n[i]);
 
-	if (const auto [fst, snd] = get_type(g, size, num); fst == 1)
+	if (const auto [fst, snd, special, small] = get_type(g, size, num); small)
+		algorithm_6(g, size, num, snd, x, y, z);
+	else if (special)
+		algorithm_5(g, size, num, fst, snd, x, y, z);
+	else if (fst == 1)
 	{
 		const size_t m = size / 2;
 		const bool flag = num[size - m - 1] != 0 && num[size - m] != 0;
@@ -1602,10 +1543,6 @@ void solve()
 		algorithm_3(g, size, num, snd, x, y, z);
 	else if (fst == 2 && size % 2 == 0)
 		algorithm_4(g, size, num, snd, x, y, z);
-	else if (fst == 3)	// special numbers
-		algorithm_5(g, size, num, x, y, z);
-	else if (fst == 4)	// small numbers
-		algorithm_6(g, size, num, snd, x, y, z);
 
 	// Print x, y, z
 	for (const auto& ch : x)
