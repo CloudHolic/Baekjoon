@@ -36,17 +36,21 @@ let main _ =
                             postFix <- operators.Pop() :: postFix
                             flag <- operators.Count > 0 && (opPriority <| string c) <= (opPriority <| operators.Peek())
                         operators.Push <| string c
-                | '(' -> operators.Push "("
+                | '(' -> 
+                    if Char.IsDigit eq[i - 1] then raise <| Error()
+                    else operators.Push "("
                 | ')' ->
-                    if number.Length = 0 && eq[i - 1] = ')' then raise <| Error()
+                    if eq[i - 1] = '(' then raise <| Error()
                     if number.Length > 0 then postFix <- number.ToString() :: postFix
                     number.Clear() |> ignore
-
-                    let mutable flag = true
-                    while flag do
-                        postFix <- operators.Pop() :: postFix
-                        flag <- operators.Peek() <> "("
-                    operators.Pop() |> ignore
+                                        
+                    if operators.Count > 0 && operators.Peek() = "(" then operators.Pop() |> ignore
+                    else
+                        let mutable flag = true
+                        while flag do
+                            postFix <- operators.Pop() :: postFix
+                            flag <- operators.Peek() <> "("
+                        operators.Pop() |> ignore
                 | _ -> raise <| Error())
 
             if number.Length = 0 && eq[eq.Length - 1] <> ')' then raise <| Error()
